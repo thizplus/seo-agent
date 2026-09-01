@@ -71,21 +71,21 @@ func (s *authServiceImpl) LoginOrRegisterWithGoogle(ctx context.Context, googleU
 	}
 
 	// 2. ค้นหาจาก email — link Google account
-	existingUser, _ := s.userRepo.GetByEmail(ctx, googleUser.Email)
-	if existingUser != nil {
+	existingUser, emailErr := s.userRepo.GetByEmail(ctx, googleUser.Email)
+	if emailErr == nil && existingUser != nil && existingUser.ID != [16]byte{} {
 		existingUser.GoogleID = googleUser.ID
-		if existingUser.AvatarURL == "" && googleUser.Picture != "" {
+		existingUser.Name = googleUser.Name
+		if googleUser.Picture != "" {
 			existingUser.AvatarURL = googleUser.Picture
 		}
-		if err := s.userRepo.Update(ctx, existingUser); err != nil {
-			return "", nil, err
-		}
+		_ = s.userRepo.Update(ctx, existingUser)
 
 		token, err := auth.GenerateToken(existingUser.ID, existingUser.Email)
 		if err != nil {
 			return "", nil, err
 		}
 		slog.InfoContext(ctx, "Google account linked", "user_id", existingUser.ID)
+		_ = s.siteMemberRepo.LinkUser(ctx, existingUser.Email, existingUser.ID)
 		return token, existingUser, nil
 	}
 
