@@ -16,14 +16,15 @@ import (
 )
 
 type siteServiceImpl struct {
-	siteRepo     repositories.SiteRepository
-	sitePageRepo repositories.SitePageRepository
-	keywordRepo  repositories.KeywordRepository
-	aiEngine     ports.AIEnginePort
+	siteRepo       repositories.SiteRepository
+	sitePageRepo   repositories.SitePageRepository
+	keywordRepo    repositories.KeywordRepository
+	siteMemberRepo repositories.SiteMemberRepository
+	aiEngine       ports.AIEnginePort
 }
 
-func NewSiteService(siteRepo repositories.SiteRepository, sitePageRepo repositories.SitePageRepository, keywordRepo repositories.KeywordRepository, aiEngine ports.AIEnginePort) *siteServiceImpl {
-	return &siteServiceImpl{siteRepo: siteRepo, sitePageRepo: sitePageRepo, keywordRepo: keywordRepo, aiEngine: aiEngine}
+func NewSiteService(siteRepo repositories.SiteRepository, sitePageRepo repositories.SitePageRepository, keywordRepo repositories.KeywordRepository, siteMemberRepo repositories.SiteMemberRepository, aiEngine ports.AIEnginePort) *siteServiceImpl {
+	return &siteServiceImpl{siteRepo: siteRepo, sitePageRepo: sitePageRepo, keywordRepo: keywordRepo, siteMemberRepo: siteMemberRepo, aiEngine: aiEngine}
 }
 
 func (s *siteServiceImpl) Create(ctx context.Context, userID uuid.UUID, req *dto.CreateSiteRequest) (*models.Site, error) {
@@ -40,7 +41,30 @@ func (s *siteServiceImpl) Create(ctx context.Context, userID uuid.UUID, req *dto
 }
 
 func (s *siteServiceImpl) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.Site, error) {
-	return s.siteRepo.GetByUserID(ctx, userID)
+	// ดึง site ที่เป็นเจ้าของ
+	ownedSites, err := s.siteRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ดึง site ที่ถูกแชร์มา
+	sharedSiteIDs, _ := s.siteMemberRepo.GetSharedSiteIDs(ctx, userID)
+	if len(sharedSiteIDs) > 0 {
+		ownedSet := map[uuid.UUID]bool{}
+		for _, site := range ownedSites {
+			ownedSet[site.ID] = true
+		}
+		for _, siteID := range sharedSiteIDs {
+			if ownedSet[siteID] {
+				continue
+			}
+			if site, err := s.siteRepo.GetByID(ctx, siteID); err == nil {
+				ownedSites = append(ownedSites, *site)
+			}
+		}
+	}
+
+	return ownedSites, nil
 }
 
 func (s *siteServiceImpl) GetByID(ctx context.Context, id uuid.UUID) (*models.Site, error) {

@@ -18,6 +18,7 @@ func Setup(app *fiber.App, c *di.Container) {
 	keywordHandler := handlers.NewKeywordHandler(c.KeywordService, c.KeywordRepo, c.SiteRepo, c.AIEngine)
 	articleHandler := handlers.NewArticleHandler(c.ArticleService)
 	pageHandler := handlers.NewPageHandler(c.SitePageRepo, c.KeywordRepo, c.SiteRepo, c.PageAnalysisRepo, c.SerpHistoryRepo, c.AIEngine)
+	memberHandler := handlers.NewMemberHandler(c.SiteMemberRepo, c.SiteRepo, c.UserRepo)
 
 	api := app.Group("/api/v1")
 
@@ -57,6 +58,9 @@ func Setup(app *fiber.App, c *di.Container) {
 	sites.Post("/:id/keywords", keywordHandler.Create)
 	sites.Get("/:id/keywords", keywordHandler.GetBySiteID)
 	sites.Get("/:id/articles", articleHandler.GetBySiteID)
+	sites.Get("/:id/members", memberHandler.GetMembers)
+	sites.Post("/:id/members", memberHandler.AddMember)
+	sites.Delete("/:id/members/:memberId", memberHandler.RemoveMember)
 
 	articles := protected.Group("/articles")
 	articles.Post("/generate", articleHandler.Generate)

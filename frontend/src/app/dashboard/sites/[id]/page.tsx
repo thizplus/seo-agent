@@ -13,6 +13,7 @@ import {
   TopicClustersCard,
   CompetitorAnalysisCard,
   ArticlesCard,
+  MembersCard,
 } from "@/features/sites"
 
 export default function SiteDetailPage({
@@ -59,6 +60,7 @@ export default function SiteDetailPage({
         <TopicClustersCard siteId={id} />
         <CompetitorAnalysisCard siteId={id} />
         <ArticlesCard siteId={id} />
+        <MembersCard siteId={id} />
       </div>
     </>
   )

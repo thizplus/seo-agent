@@ -58,6 +58,15 @@ export interface PipelineResult {
   message?: string
 }
 
+export interface SiteMember {
+  id: string
+  siteId: string
+  email: string
+  role: "owner" | "editor"
+  joined: boolean
+  createdAt?: string
+}
+
 export interface CompetitorResult {
   url: string
   summary: string

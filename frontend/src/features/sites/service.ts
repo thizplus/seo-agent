@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult } from "./types"
+import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult, SiteMember } from "./types"
 
 export const siteService = {
   async getAll(): Promise<Site[]> {
@@ -67,5 +67,19 @@ export const siteService = {
   async analyzeCompetitor(id: string, competitorUrl: string): Promise<CompetitorResult> {
     const res = await apiClient.post<{ data: CompetitorResult }>(API_ROUTES.SITES.ANALYZE_COMPETITOR(id), { competitorUrl })
     return res.data.data
+  },
+
+  async getMembers(id: string): Promise<SiteMember[]> {
+    const res = await apiClient.get<{ data: SiteMember[] }>(API_ROUTES.SITES.MEMBERS(id))
+    return res.data.data
+  },
+
+  async addMember(id: string, email: string): Promise<SiteMember> {
+    const res = await apiClient.post<{ data: SiteMember }>(API_ROUTES.SITES.MEMBERS(id), { email })
+    return res.data.data
+  },
+
+  async removeMember(id: string, memberId: string): Promise<void> {
+    await apiClient.delete(API_ROUTES.SITES.REMOVE_MEMBER(id, memberId))
   },
 }

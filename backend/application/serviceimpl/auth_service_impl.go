@@ -16,23 +16,26 @@ import (
 )
 
 type authServiceImpl struct {
-	userRepo          repositories.UserRepository
-	googleClientID    string
+	userRepo           repositories.UserRepository
+	siteMemberRepo     repositories.SiteMemberRepository
+	googleClientID     string
 	googleClientSecret string
-	googleRedirectURL string
+	googleRedirectURL  string
 }
 
 func NewAuthService(
 	userRepo repositories.UserRepository,
+	siteMemberRepo repositories.SiteMemberRepository,
 	googleClientID string,
 	googleClientSecret string,
 	googleRedirectURL string,
 ) *authServiceImpl {
 	return &authServiceImpl{
-		userRepo:          userRepo,
-		googleClientID:    googleClientID,
+		userRepo:           userRepo,
+		siteMemberRepo:     siteMemberRepo,
+		googleClientID:     googleClientID,
 		googleClientSecret: googleClientSecret,
-		googleRedirectURL: googleRedirectURL,
+		googleRedirectURL:  googleRedirectURL,
 	}
 }
 
@@ -63,6 +66,7 @@ func (s *authServiceImpl) LoginOrRegisterWithGoogle(ctx context.Context, googleU
 			return "", nil, err
 		}
 		slog.InfoContext(ctx, "Google login successful", "user_id", user.ID)
+		_ = s.siteMemberRepo.LinkUser(ctx, user.Email, user.ID)
 		return token, user, nil
 	}
 
@@ -109,6 +113,10 @@ func (s *authServiceImpl) LoginOrRegisterWithGoogle(ctx context.Context, googleU
 	}
 
 	slog.InfoContext(ctx, "New user registered via Google", "user_id", user.ID, "email", user.Email)
+
+	// Link pending site_members ที่ invite ไว้ด้วย email นี้
+	_ = s.siteMemberRepo.LinkUser(ctx, user.Email, user.ID)
+
 	return token, user, nil
 }
 

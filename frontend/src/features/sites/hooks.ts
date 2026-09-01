@@ -120,3 +120,35 @@ export function useDisconnectGsc(id: string) {
     },
   })
 }
+
+export const memberKeys = {
+  all: ["members"] as const,
+  list: (siteId: string) => [...memberKeys.all, "list", siteId] as const,
+}
+
+export function useSiteMembers(siteId: string) {
+  return useQuery({
+    queryKey: memberKeys.list(siteId),
+    queryFn: () => siteService.getMembers(siteId),
+  })
+}
+
+export function useAddMember(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (email: string) => siteService.addMember(siteId, email),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: memberKeys.list(siteId) })
+    },
+  })
+}
+
+export function useRemoveMember(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (memberId: string) => siteService.removeMember(siteId, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: memberKeys.list(siteId) })
+    },
+  })
+}

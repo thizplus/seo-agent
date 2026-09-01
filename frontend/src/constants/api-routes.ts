@@ -25,6 +25,8 @@ export const API_ROUTES = {
     CREATE_CLUSTER: (id: string) => `${API_BASE}/api/v1/sites/${id}/clusters`,
     ANALYZE_COMPETITOR: (id: string) => `${API_BASE}/api/v1/sites/${id}/competitors`,
     RUN_PIPELINE: (id: string) => `${API_BASE}/api/v1/sites/${id}/pipeline`,
+    MEMBERS: (id: string) => `${API_BASE}/api/v1/sites/${id}/members`,
+    REMOVE_MEMBER: (id: string, memberId: string) => `${API_BASE}/api/v1/sites/${id}/members/${memberId}`,
   },
 
   // Pages
