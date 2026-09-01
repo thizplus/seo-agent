@@ -247,6 +247,7 @@ func (s *Scheduler) runContentGeneration() {
 
 		if generated > 0 {
 			slog.Info("ContentGen: Site complete", "site", site.Name, "articles", generated)
+			time.Sleep(120 * time.Second) // delay ระหว่าง site ป้องกัน rate limit
 		}
 	}
 }
