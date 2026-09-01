@@ -54,7 +54,8 @@ export interface PipelineStep {
 }
 
 export interface PipelineResult {
-  steps: PipelineStep[]
+  steps?: PipelineStep[]
+  message?: string
 }
 
 export interface CompetitorResult {
