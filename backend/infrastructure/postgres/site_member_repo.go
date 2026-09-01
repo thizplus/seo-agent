@@ -39,7 +39,7 @@ func (r *siteMemberRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 func (r *siteMemberRepository) LinkUser(ctx context.Context, email string, userID uuid.UUID) error {
 	return r.db.WithContext(ctx).Model(&models.SiteMember{}).
-		Where("email = ? AND user_id IS NULL", email).
+		Where("email = ? AND (user_id IS NULL OR user_id = '00000000-0000-0000-0000-000000000000')", email).
 		Update("user_id", userID).Error
 }
 

@@ -100,8 +100,8 @@ func (h *MemberHandler) AddMember(c *fiber.Ctx) error {
 
 	// ถ้า user เคย login แล้ว link user_id ให้เลย
 	var linkedUserID *uuid.UUID
-	existingUser, _ := h.userRepo.GetByEmail(c.UserContext(), body.Email)
-	if existingUser != nil {
+	existingUser, err := h.userRepo.GetByEmail(c.UserContext(), body.Email)
+	if err == nil && existingUser != nil && existingUser.ID != uuid.Nil {
 		linkedUserID = &existingUser.ID
 	}
 
