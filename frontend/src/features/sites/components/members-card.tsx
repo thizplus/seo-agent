@@ -13,10 +13,15 @@ interface MembersCardProps {
 }
 
 export function MembersCard({ siteId }: MembersCardProps) {
-  const { data: members, isLoading } = useSiteMembers(siteId)
+  const { data, isLoading } = useSiteMembers(siteId)
   const addMember = useAddMember(siteId)
   const removeMember = useRemoveMember(siteId)
   const [email, setEmail] = useState("")
+
+  // ไม่แสดง card ถ้าไม่ใช่เจ้าของ
+  if (!isLoading && data && !data.isOwner) return null
+
+  const members = data?.members || []
 
   const handleAdd = () => {
     if (!email.trim()) return
@@ -65,7 +70,7 @@ export function MembersCard({ siteId }: MembersCardProps) {
         {/* Members list */}
         {isLoading ? (
           <p className="text-muted-foreground">กำลังโหลด...</p>
-        ) : !members?.length ? (
+        ) : !members.length ? (
           <p className="text-muted-foreground">ยังไม่มีสมาชิก</p>
         ) : (
           <div className="flex flex-col gap-2">

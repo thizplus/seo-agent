@@ -69,8 +69,8 @@ export const siteService = {
     return res.data.data
   },
 
-  async getMembers(id: string): Promise<SiteMember[]> {
-    const res = await apiClient.get<{ data: SiteMember[] }>(API_ROUTES.SITES.MEMBERS(id))
+  async getMembers(id: string): Promise<{ members: SiteMember[]; isOwner: boolean }> {
+    const res = await apiClient.get<{ data: { members: SiteMember[]; isOwner: boolean } }>(API_ROUTES.SITES.MEMBERS(id))
     return res.data.data
   },
 

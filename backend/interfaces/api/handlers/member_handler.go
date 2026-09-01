@@ -33,8 +33,10 @@ func (h *MemberHandler) GetMembers(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.NotFoundResponse(c, "ไม่พบเว็บไซต์")
 	}
+
+	// non-owner: return empty + isOwner=false (ไม่แสดง Members Card)
 	if site.UserID != userID {
-		return utils.UnauthorizedResponse(c, "เฉพาะเจ้าของเว็บไซต์เท่านั้น")
+		return utils.SuccessResponse(c, fiber.Map{"members": []fiber.Map{}, "isOwner": false})
 	}
 
 	owner, _ := h.userRepo.GetByID(c.UserContext(), site.UserID)
@@ -68,7 +70,7 @@ func (h *MemberHandler) GetMembers(c *fiber.Ctx) error {
 		})
 	}
 
-	return utils.SuccessResponse(c, result)
+	return utils.SuccessResponse(c, fiber.Map{"members": result, "isOwner": true})
 }
 
 func (h *MemberHandler) AddMember(c *fiber.Ctx) error {
