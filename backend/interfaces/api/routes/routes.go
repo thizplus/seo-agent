@@ -12,8 +12,8 @@ func Setup(app *fiber.App, c *di.Container) {
 	googleRedirectURI := c.Config.Google.RedirectURL
 	gscRedirectURI := googleRedirectURI[:len(googleRedirectURI)-len("/api/v1/auth/google/callback")] + "/api/v1/auth/gsc/callback"
 
-	authHandler := handlers.NewAuthHandler(c.AuthService, c.GoogleOAuth, c.Config.FrontendURL, googleRedirectURI)
-	gscHandler := handlers.NewGSCHandler(c.SiteRepo, c.GoogleOAuth, c.Config.FrontendURL, gscRedirectURI)
+	authHandler := handlers.NewAuthHandler(c.AuthService, c.GoogleOAuth, c.Config.FrontendURL, googleRedirectURI, c.Config.CookieDomain)
+	gscHandler := handlers.NewGSCHandler(c.SiteRepo, c.GoogleOAuth, c.Config.FrontendURL, gscRedirectURI, c.Config.CookieDomain)
 	siteHandler := handlers.NewSiteHandler(c.SiteService, c.KeywordService, c.ArticleService)
 	keywordHandler := handlers.NewKeywordHandler(c.KeywordService, c.KeywordRepo, c.SiteRepo, c.AIEngine)
 	articleHandler := handlers.NewArticleHandler(c.ArticleService)

@@ -30,9 +30,10 @@ func Setup(app *fiber.App, frontendURL string) {
 	})
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: frontendURL,
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders: "Origin,Content-Type,Accept,Authorization",
+		AllowOrigins:     frontendURL,
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
+		AllowCredentials: true,
 	}))
 }
 

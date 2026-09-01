@@ -14,22 +14,27 @@ import (
 )
 
 type AuthHandler struct {
-	authService services.AuthService
-	googleOAuth ports.GoogleOAuthPort
-	frontendURL string
-	redirectURI string
+	authService  services.AuthService
+	googleOAuth  ports.GoogleOAuthPort
+	frontendURL  string
+	redirectURI  string
+	cookieDomain string
 }
 
-func NewAuthHandler(authService services.AuthService, googleOAuth ports.GoogleOAuthPort, frontendURL, redirectURI string) *AuthHandler {
+func NewAuthHandler(authService services.AuthService, googleOAuth ports.GoogleOAuthPort, frontendURL, redirectURI, cookieDomain string) *AuthHandler {
 	return &AuthHandler{
 		authService: authService, googleOAuth: googleOAuth,
 		frontendURL: frontendURL, redirectURI: redirectURI,
+		cookieDomain: cookieDomain,
 	}
 }
 
 func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
 	state := utils.GenerateRandomString(32)
-	c.Cookie(&fiber.Cookie{Name: "oauth_state", Value: state, HTTPOnly: true, SameSite: "Lax", MaxAge: 300})
+	c.Cookie(&fiber.Cookie{
+		Name: "oauth_state", Value: state, HTTPOnly: true,
+		SameSite: "None", Secure: true, Domain: h.cookieDomain, MaxAge: 300,
+	})
 
 	oauthURL := h.googleOAuth.GetAuthURL(state, h.redirectURI, "openid email profile")
 	return c.Redirect(oauthURL, fiber.StatusTemporaryRedirect)
@@ -48,7 +53,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	if savedState == "" || savedState != state {
 		return c.Redirect(h.frontendURL+"/login?error=invalid_state", fiber.StatusTemporaryRedirect)
 	}
-	c.Cookie(&fiber.Cookie{Name: "oauth_state", Value: "", MaxAge: -1, HTTPOnly: true})
+	c.Cookie(&fiber.Cookie{Name: "oauth_state", Value: "", MaxAge: -1, HTTPOnly: true, SameSite: "None", Secure: true, Domain: h.cookieDomain})
 
 	tokenResp, err := h.googleOAuth.ExchangeCode(code, h.redirectURI)
 	if err != nil {

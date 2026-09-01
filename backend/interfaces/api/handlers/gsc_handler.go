@@ -12,14 +12,15 @@ import (
 )
 
 type GSCHandler struct {
-	siteRepo    repositories.SiteRepository
-	googleOAuth ports.GoogleOAuthPort
-	frontendURL string
-	gscRedirect string
+	siteRepo     repositories.SiteRepository
+	googleOAuth  ports.GoogleOAuthPort
+	frontendURL  string
+	gscRedirect  string
+	cookieDomain string
 }
 
-func NewGSCHandler(siteRepo repositories.SiteRepository, googleOAuth ports.GoogleOAuthPort, frontendURL, gscRedirectURI string) *GSCHandler {
-	return &GSCHandler{siteRepo: siteRepo, googleOAuth: googleOAuth, frontendURL: frontendURL, gscRedirect: gscRedirectURI}
+func NewGSCHandler(siteRepo repositories.SiteRepository, googleOAuth ports.GoogleOAuthPort, frontendURL, gscRedirectURI, cookieDomain string) *GSCHandler {
+	return &GSCHandler{siteRepo: siteRepo, googleOAuth: googleOAuth, frontendURL: frontendURL, gscRedirect: gscRedirectURI, cookieDomain: cookieDomain}
 }
 
 func (h *GSCHandler) Connect(c *fiber.Ctx) error {
@@ -29,8 +30,8 @@ func (h *GSCHandler) Connect(c *fiber.Ctx) error {
 	}
 
 	state := utils.GenerateRandomString(32)
-	c.Cookie(&fiber.Cookie{Name: "gsc_oauth_state", Value: state, HTTPOnly: true, SameSite: "Lax", MaxAge: 300})
-	c.Cookie(&fiber.Cookie{Name: "gsc_site_id", Value: siteID, HTTPOnly: true, SameSite: "Lax", MaxAge: 300})
+	c.Cookie(&fiber.Cookie{Name: "gsc_oauth_state", Value: state, HTTPOnly: true, SameSite: "None", Secure: true, Domain: h.cookieDomain, MaxAge: 300})
+	c.Cookie(&fiber.Cookie{Name: "gsc_site_id", Value: siteID, HTTPOnly: true, SameSite: "None", Secure: true, Domain: h.cookieDomain, MaxAge: 300})
 
 	oauthURL := h.googleOAuth.GetAuthURL(state, h.gscRedirect, "https://www.googleapis.com/auth/webmasters.readonly")
 	return c.Redirect(oauthURL, fiber.StatusTemporaryRedirect)
@@ -44,7 +45,7 @@ func (h *GSCHandler) Callback(c *fiber.Ctx) error {
 
 	// ลบ cookies
 	for _, name := range []string{"gsc_oauth_state", "gsc_site_id"} {
-		c.Cookie(&fiber.Cookie{Name: name, Value: "", MaxAge: -1, HTTPOnly: true})
+		c.Cookie(&fiber.Cookie{Name: name, Value: "", MaxAge: -1, HTTPOnly: true, SameSite: "None", Secure: true, Domain: h.cookieDomain})
 	}
 
 	if code == "" || savedState == "" || savedState != state || siteID == "" {

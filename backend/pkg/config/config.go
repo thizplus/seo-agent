@@ -6,17 +6,18 @@ import (
 )
 
 type Config struct {
-	DBHost      string
-	DBPort      string
-	DBUser      string
-	DBPassword  string
-	DBName      string
-	RedisURL    string
-	AIEngineURL string
-	AppPort     string
-	FrontendURL string
-	JWTSecret   string
-	Google      GoogleOAuthConfig
+	DBHost       string
+	DBPort       string
+	DBUser       string
+	DBPassword   string
+	DBName       string
+	RedisURL     string
+	AIEngineURL  string
+	AppPort      string
+	FrontendURL  string
+	JWTSecret    string
+	CookieDomain string
+	Google       GoogleOAuthConfig
 }
 
 type GoogleOAuthConfig struct {
@@ -39,8 +40,9 @@ func Load() *Config {
 		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379"),
 		AIEngineURL: getEnv("AI_ENGINE_URL", "http://localhost:8000"),
 		AppPort:     appPort,
-		FrontendURL: frontendURL,
-		JWTSecret:   getEnv("JWT_SECRET", "seo-agents-jwt-secret-change-me"),
+		FrontendURL:  frontendURL,
+		JWTSecret:    getEnv("JWT_SECRET", "seo-agents-jwt-secret-change-me"),
+		CookieDomain: getEnv("COOKIE_DOMAIN", ""),
 		Google: GoogleOAuthConfig{
 			ClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 			ClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
