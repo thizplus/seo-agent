@@ -1,0 +1,53 @@
+# Environment & Secrets
+.env
+.env.*
+client_secret_*.json
+credentials/
+
+# Go
+backend/tmp/
+backend/build-errors.log
+*.exe
+
+# Python
+ai-engine/__pycache__/
+ai-engine/.venv/
+ai-engine/venv/
+**/__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+frontend/.next/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# Skills repo (clone separately)
+ai-engine/skills_repo/
+
+# Claude Code
+.claude/
+
+# Screenshots & local files
+*.png
+logs.txt
+start-all.bat
+
+# Logs
+*.log
+backend/logs/
+ai-engine/logs/
+
+# Recomment folder (drafts/notes)
+recomment/
