@@ -16,20 +16,20 @@ export default function SitesPage() {
       <PageHeader
         items={[
           { label: "Dashboard", href: NAV_ROUTES.DASHBOARD },
-          { label: "Sites" },
+          { label: "เว็บไซต์" },
         ]}
       />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Sites</h1>
+          <h1 className="text-2xl font-bold">เว็บไซต์</h1>
           <Link href={NAV_ROUTES.SITES.NEW} className={buttonVariants()}>
             <PlusIcon className="mr-2 size-4" />
-            Add Site
+            เพิ่มเว็บไซต์
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-muted-foreground">กำลังโหลด...</div>
         ) : !sites?.length ? (
           <div className="rounded-xl border border-dashed p-12 text-center">
             <GlobeIcon className="mx-auto size-10 text-muted-foreground" />
@@ -39,12 +39,12 @@ export default function SitesPage() {
           <div className="rounded-xl border">
             <table className="w-full">
               <thead>
-                <tr className="border-b text-left text-sm text-muted-foreground">
-                  <th className="p-4 font-medium">Name</th>
+                <tr className="border-b text-left text-base text-muted-foreground">
+                  <th className="p-4 font-medium">ชื่อ</th>
                   <th className="p-4 font-medium">URL</th>
                   <th className="p-4 font-medium">AI</th>
                   <th className="p-4 font-medium">WordPress</th>
-                  <th className="p-4 font-medium">Actions</th>
+                  <th className="p-4 font-medium">จัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -58,7 +58,7 @@ export default function SitesPage() {
                         {site.name}
                       </Link>
                     </td>
-                    <td className="p-4 text-sm text-muted-foreground">
+                    <td className="p-4 text-base text-muted-foreground">
                       {site.url}
                     </td>
                     <td className="p-4">
@@ -70,7 +70,7 @@ export default function SitesPage() {
                     </td>
                     <td className="p-4">
                       {site.hasWordPress ? (
-                        <span className="text-blue-600">Connected</span>
+                        <span className="text-blue-600">เชื่อมต่อแล้ว</span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
@@ -80,7 +80,7 @@ export default function SitesPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (confirm(`Delete "${site.name}"?`)) {
+                          if (confirm(`ลบ "${site.name}" หรือไม่?`)) {
                             deleteSite.mutate(site.id)
                           }
                         }}

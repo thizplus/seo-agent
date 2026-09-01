@@ -75,17 +75,17 @@ export function PagesCard({ siteId }: PagesCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LayoutListIcon className="size-5" />
-          Pages ({pages?.length || 0})
+          หน้าเว็บ ({pages?.length || 0})
         </CardTitle>
-        <CardDescription>Click page to view analysis. Click Analyze to fetch SERP competitors.</CardDescription>
+        <CardDescription>คลิกหน้าเพื่อดูผลวิเคราะห์ คลิก วิเคราะห์ เพื่อดึงข้อมูลคู่แข่ง SERP</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading pages...</p>
+          <p className="text-muted-foreground">กำลังโหลดหน้าเว็บ...</p>
         ) : !pages?.length ? (
           <div className="text-center py-6">
             <LayoutListIcon className="mx-auto size-8 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">No pages yet. Run Pipeline first.</p>
+            <p className="mt-2 text-muted-foreground">ยังไม่มีหน้าเว็บ เริ่มไปป์ไลน์ก่อน</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -110,13 +110,13 @@ export function PagesCard({ siteId }: PagesCardProps) {
                           <Badge className={PAGE_TYPE_COLORS[page.pageType] || PAGE_TYPE_COLORS.other}>
                             {page.pageType}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">{page.wordCount} words</span>
+                          <span className="text-xs text-muted-foreground">{page.wordCount} คำ</span>
                           {page.auditScore !== undefined && page.auditScore > 0 && (
                             <Badge className={SCORE_COLOR(page.auditScore)}>{page.auditScore}/100</Badge>
                           )}
                           {isLoadingThis && <Loader2Icon className="size-3 animate-spin" />}
                         </div>
-                        <p className="text-sm font-medium truncate">{page.h1 || page.title || page.url}</p>
+                        <p className="font-medium truncate">{page.h1 || page.title || page.url}</p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-muted-foreground truncate">
                             {(() => { try { return decodeURIComponent(new URL(page.url).pathname) } catch { return page.url } })()}
@@ -151,7 +151,7 @@ export function PagesCard({ siteId }: PagesCardProps) {
                         disabled={analyzePage.isPending}
                       >
                         {analyzePage.isPending ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <SearchIcon className="mr-1 size-4" />}
-                        Analyze
+                        วิเคราะห์
                       </Button>
                     </div>
                   </div>
@@ -160,7 +160,7 @@ export function PagesCard({ siteId }: PagesCardProps) {
                   {isExpanded && (
                     <div className="border-t p-3 bg-muted/30 space-y-3">
                       {!analysis ? (
-                        <p className="text-sm text-muted-foreground">No analysis yet. Click Analyze to fetch SERP data.</p>
+                        <p className="text-muted-foreground">ยังไม่มีผลวิเคราะห์ คลิก วิเคราะห์ เพื่อดึงข้อมูล SERP</p>
                       ) : (
                         <>
                           {/* Audit Score */}
@@ -169,16 +169,16 @@ export function PagesCard({ siteId }: PagesCardProps) {
                               {analysis.auditScore}/100
                             </Badge>
                             <div className="text-sm space-x-2">
-                              <span>Our: {analysis.ourWordCount} words</span>
+                              <span>เรา: {analysis.ourWordCount} คำ</span>
                               <span>|</span>
-                              <span>Avg competitor: {analysis.avgWordCount} words</span>
+                              <span>เฉลี่ยคู่แข่ง: {analysis.avgWordCount} คำ</span>
                             </div>
                           </div>
 
                           {/* Issues */}
                           {analysis.issues?.length > 0 && (
                             <div>
-                              <p className="text-sm font-medium mb-1">Issues</p>
+                              <p className="font-medium mb-1">ปัญหา</p>
                               <div className="space-y-1">
                                 {analysis.issues.map((issue, i) => (
                                   <div key={i} className="flex items-start gap-2 text-sm">
@@ -202,7 +202,7 @@ export function PagesCard({ siteId }: PagesCardProps) {
                                 {snap.our_position > 0 ? (
                                   <Badge className="ml-2 bg-green-100 text-green-700">#{snap.our_position}</Badge>
                                 ) : (
-                                  <Badge className="ml-2" variant="secondary">not ranking</Badge>
+                                  <Badge className="ml-2" variant="secondary">ไม่ติดอันดับ</Badge>
                                 )}
                               </p>
                               {snap.results?.length > 0 ? (
@@ -216,12 +216,12 @@ export function PagesCard({ siteId }: PagesCardProps) {
                                           <ExternalLinkIcon className="size-3 hover:text-foreground" />
                                         </a>
                                       </div>
-                                      <span className="shrink-0">{r.word_count} words</span>
+                                      <span className="shrink-0">{r.word_count} คำ</span>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-xs text-muted-foreground">No SERP results</p>
+                                <p className="text-xs text-muted-foreground">ไม่มีผล SERP</p>
                               )}
                             </div>
                           ))}
@@ -229,7 +229,7 @@ export function PagesCard({ siteId }: PagesCardProps) {
                           {/* Recommendations */}
                           {analysis.recommendations?.length > 0 && (
                             <div>
-                              <p className="text-sm font-medium mb-1">Recommendations</p>
+                              <p className="font-medium mb-1">คำแนะนำ</p>
                               <ul className="space-y-1">
                                 {analysis.recommendations.map((rec, i) => (
                                   <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">

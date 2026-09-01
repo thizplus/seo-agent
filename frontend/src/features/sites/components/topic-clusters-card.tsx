@@ -21,7 +21,7 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
   const handleCreate = () => {
     const kwList = keywords?.map((k) => k.keyword) || []
     if (kwList.length < 2) {
-      alert("Need at least 2 keywords to create a cluster")
+      alert("ต้องมีคีย์เวิร์ดอย่างน้อย 2 คำ")
       return
     }
     createCluster.mutate(kwList, {
@@ -37,9 +37,9 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <NetworkIcon className="size-5" />
-              Topic Clusters
+              กลุ่มหัวข้อ
             </CardTitle>
-            <CardDescription>Group keywords into pillar + supporting structure</CardDescription>
+            <CardDescription>จัดกลุ่มคีย์เวิร์ดเป็นบทความหลัก + บทความสนับสนุน</CardDescription>
           </div>
           <Button
             variant="outline"
@@ -48,7 +48,7 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
             disabled={createCluster.isPending || !keywords?.length}
           >
             {createCluster.isPending ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <PlusIcon className="mr-1 size-4" />}
-            {createCluster.isPending ? "Creating..." : "Create Cluster"}
+            {createCluster.isPending ? "กำลังสร้าง..." : "สร้างกลุ่ม"}
           </Button>
         </div>
       </CardHeader>
@@ -56,8 +56,8 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
         {clusters.length === 0 ? (
           <div className="text-center py-6">
             <NetworkIcon className="mx-auto size-8 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              No clusters yet. Add 2+ keywords then create a cluster.
+            <p className="mt-2 text-muted-foreground">
+              ยังไม่มีกลุ่ม เพิ่มคีย์เวิร์ด 2+ แล้วสร้างกลุ่ม
             </p>
           </div>
         ) : (
@@ -65,14 +65,14 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
             {clusters.map((cluster, idx) => (
               <div key={idx} className="rounded-lg border p-4">
                 <div className="mb-3">
-                  <Badge className="mb-2">Pillar</Badge>
+                  <Badge className="mb-2">บทความหลัก</Badge>
                   <h4 className="font-semibold">{cluster.pillarTitle}</h4>
-                  <p className="text-sm text-muted-foreground">{cluster.pillarKeyword}</p>
+                  <p className="text-muted-foreground">{cluster.pillarKeyword}</p>
                 </div>
 
                 {cluster.supportingKeywords.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Supporting Articles</p>
+                    <p className="font-medium text-muted-foreground mb-2">บทความสนับสนุน</p>
                     <div className="flex flex-col gap-1.5">
                       {cluster.supportingKeywords.map((sk, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm">
@@ -87,7 +87,7 @@ export function TopicClustersCard({ siteId }: TopicClustersCardProps) {
 
                 {cluster.linkMap.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Internal Link Map</p>
+                    <p className="font-medium text-muted-foreground mb-2">แผนผังลิงก์ภายใน</p>
                     <div className="flex flex-col gap-1 text-xs">
                       {cluster.linkMap.map((link, i) => (
                         <div key={i} className="flex items-center gap-1.5 text-muted-foreground">

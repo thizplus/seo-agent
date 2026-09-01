@@ -87,7 +87,7 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>เมนูหลัก</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>
           !item.items?.length ? (

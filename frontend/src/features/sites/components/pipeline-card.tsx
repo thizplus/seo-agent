@@ -19,9 +19,9 @@ const STEP_ICONS: Record<string, typeof ScanSearchIcon> = {
 }
 
 const STEP_LABELS: Record<string, string> = {
-  analyze: "Analyze Site",
-  discover: "Discover Keywords",
-  generate: "Generate Articles",
+  analyze: "วิเคราะห์เว็บไซต์",
+  discover: "ค้นหาคีย์เวิร์ด",
+  generate: "สร้างบทความ",
 }
 
 export function PipelineCard({ siteId }: PipelineCardProps) {
@@ -43,10 +43,10 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <RocketIcon className="size-5" />
-              Auto Pipeline
+              ไปป์ไลน์อัตโนมัติ
             </CardTitle>
             <CardDescription>
-              Analyze → Discover Keywords → Generate Articles (ปุ่มเดียวจบ)
+              วิเคราะห์ → ค้นหาคีย์เวิร์ด → สร้างบทความ (ปุ่มเดียวจบ)
             </CardDescription>
           </div>
           <Button onClick={handleRun} disabled={pipeline.isPending}>
@@ -55,7 +55,7 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
             ) : (
               <RocketIcon className="mr-2 size-4" />
             )}
-            {pipeline.isPending ? "Running..." : "Run Pipeline"}
+            {pipeline.isPending ? "กำลังทำงาน..." : "เริ่มไปป์ไลน์"}
           </Button>
         </div>
       </CardHeader>
@@ -64,7 +64,7 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
         <CardContent>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <Loader2Icon className="size-4 animate-spin" />
-            กำลังทำงาน... (Analyze → Discover → Generate) อาจใช้เวลา 3-5 นาที
+            กำลังทำงาน... (วิเคราะห์ → ค้นหา → สร้างบทความ) อาจใช้เวลา 3-5 นาที
           </div>
         </CardContent>
       )}
@@ -86,17 +86,17 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
                       <XCircleIcon className="size-4 text-red-600" />
                     )}
                     <Icon className="size-4" />
-                    <span className="font-medium text-sm">{label}</span>
+                    <span className="font-medium">{label}</span>
                     <Badge variant={isOk ? "default" : "destructive"} className="ml-auto">
-                      {step.status}
+                      {step.status === "completed" ? "สำเร็จ" : step.status === "failed" ? "ล้มเหลว" : step.status}
                     </Badge>
                   </div>
 
                   {/* Step-specific data */}
                   {step.name === "analyze" && isOk && (
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Business: {step.data?.businessType} | Industry: {step.data?.industry}</p>
-                      <p>Seeds: {step.data?.seedCount} keywords extracted</p>
+                      <p>ธุรกิจ: {step.data?.businessType} | อุตสาหกรรม: {step.data?.industry}</p>
+                      <p>คีย์เวิร์ดเริ่มต้น: {step.data?.seedCount} คีย์เวิร์ดที่ดึงได้</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(step.data?.seeds || []).slice(0, 8).map((s: string, j: number) => (
                           <Badge key={j} variant="outline" className="text-xs">{s}</Badge>
@@ -110,7 +110,7 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
 
                   {step.name === "discover" && isOk && (
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Found: {step.data?.totalFound} keywords | Saved: {(step.data?.savedKeywords || []).length} (score &ge; 5)</p>
+                      <p>พบ: {step.data?.totalFound} คีย์เวิร์ด | บันทึก: {(step.data?.savedKeywords || []).length} (score &ge; 5)</p>
                       {(step.data?.savedKeywords || []).map((kw: any, j: number) => (
                         <div key={j} className="flex items-center gap-2">
                           <Badge className="bg-green-100 text-green-700 text-xs">{kw.score}/10</Badge>
@@ -123,12 +123,12 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
                   {step.name === "generate" && isOk && (
                     <div className="text-sm text-muted-foreground space-y-1">
                       {(step.data?.articles || []).length === 0 ? (
-                        <p>No new articles generated (all keywords already have articles)</p>
+                        <p>ไม่มีบทความใหม่ (ทุกคีย์เวิร์ดมีบทความแล้ว)</p>
                       ) : (
                         (step.data?.articles || []).map((a: any, j: number) => (
                           <div key={j} className="flex items-center justify-between">
                             <span className="truncate max-w-[70%]">{a.title}</span>
-                            <span className="text-xs">{a.wordCount} words</span>
+                            <span className="text-xs">{a.wordCount} คำ</span>
                           </div>
                         ))
                       )}

@@ -55,29 +55,29 @@ export default function NewSitePage() {
       <PageHeader
         items={[
           { label: "Dashboard", href: NAV_ROUTES.DASHBOARD },
-          { label: "Sites", href: NAV_ROUTES.SITES.LIST },
-          { label: "Add Site" },
+          { label: "เว็บไซต์", href: NAV_ROUTES.SITES.LIST },
+          { label: "เพิ่มเว็บไซต์" },
         ]}
       />
       <div className="flex flex-1 flex-col gap-6 p-4 pt-0 max-w-2xl">
-        <h1 className="text-2xl font-bold">Add New Site</h1>
+        <h1 className="text-2xl font-bold">เพิ่มเว็บไซต์</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Basic Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Site Information</CardTitle>
-              <CardDescription>Basic details about your website</CardDescription>
+              <CardTitle>ข้อมูลเว็บไซต์</CardTitle>
+              <CardDescription>รายละเอียดพื้นฐานเกี่ยวกับเว็บไซต์ของคุณ</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Site Name *</Label>
+                <Label htmlFor="name">ชื่อเว็บไซต์ *</Label>
                 <Input
                   id="name"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="My Website"
+                  placeholder="เว็บไซต์ของฉัน"
                   required
                 />
               </div>
@@ -93,23 +93,23 @@ export default function NewSitePage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">คำอธิบาย</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  placeholder="What is this site about?"
+                  placeholder="เว็บไซต์นี้เกี่ยวกับอะไร?"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="industry">Industry</Label>
+                <Label htmlFor="industry">อุตสาหกรรม</Label>
                 <Input
                   id="industry"
                   name="industry"
                   value={form.industry}
                   onChange={handleChange}
-                  placeholder="e.g. ecommerce, health, education"
+                  placeholder="เช่น อีคอมเมิร์ซ, สุขภาพ, การศึกษา"
                 />
               </div>
             </CardContent>
@@ -118,20 +118,20 @@ export default function NewSitePage() {
           {/* AI Config */}
           <Card>
             <CardHeader>
-              <CardTitle>AI Configuration</CardTitle>
+              <CardTitle>ตั้งค่า AI</CardTitle>
               <CardDescription>
-                Choose your LLM provider for AI-powered content generation
+                เลือก LLM สำหรับสร้างเนื้อหาด้วย AI
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="llmProvider">LLM Provider</Label>
+                <Label htmlFor="llmProvider">ผู้ให้บริการ LLM</Label>
                 <select
                   id="llmProvider"
                   name="llmProvider"
                   value={form.llmProvider}
                   onChange={(e) => setForm((prev) => ({ ...prev, llmProvider: e.target.value }))}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base"
                 >
                   {LLM_PROVIDERS.map((p) => (
                     <option key={p.value} value={p.value}>{p.label}</option>
@@ -155,14 +155,14 @@ export default function NewSitePage() {
           {/* WordPress Config */}
           <Card>
             <CardHeader>
-              <CardTitle>WordPress Connection</CardTitle>
+              <CardTitle>เชื่อมต่อ WordPress</CardTitle>
               <CardDescription>
-                Connect to WordPress for auto-publishing
+                เชื่อมต่อ WordPress สำหรับเผยแพร่อัตโนมัติ
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="wpUrl">WordPress URL</Label>
+                <Label htmlFor="wpUrl">URL ของ WordPress</Label>
                 <Input
                   id="wpUrl"
                   name="wpUrl"
@@ -172,7 +172,7 @@ export default function NewSitePage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="wpUsername">Username</Label>
+                <Label htmlFor="wpUsername">ชื่อผู้ใช้</Label>
                 <Input
                   id="wpUsername"
                   name="wpUsername"
@@ -182,7 +182,7 @@ export default function NewSitePage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="wpAppPassword">Application Password</Label>
+                <Label htmlFor="wpAppPassword">รหัสผ่านแอปพลิเคชัน</Label>
                 <Input
                   id="wpAppPassword"
                   name="wpAppPassword"
@@ -198,18 +198,18 @@ export default function NewSitePage() {
           {/* Submit */}
           <div className="flex gap-4">
             <Button type="submit" disabled={createSite.isPending}>
-              {createSite.isPending ? "Creating..." : "Create Site"}
+              {createSite.isPending ? "กำลังสร้าง..." : "สร้างเว็บไซต์"}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push(NAV_ROUTES.SITES.LIST)}
             >
-              Cancel
+              ยกเลิก
             </Button>
           </div>
           {createSite.isError && (
-            <p className="text-sm text-destructive">
+            <p className="text-base text-destructive">
               {createSite.error.message}
             </p>
           )}

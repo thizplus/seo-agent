@@ -26,8 +26,8 @@ export default function SiteDetailPage({
   if (isLoading) {
     return (
       <>
-        <PageHeader items={[{ label: "Loading..." }]} />
-        <div className="p-4 text-muted-foreground">Loading site...</div>
+        <PageHeader items={[{ label: "กำลังโหลด..." }]} />
+        <div className="p-4 text-muted-foreground">กำลังโหลดเว็บไซต์...</div>
       </>
     )
   }
@@ -35,8 +35,8 @@ export default function SiteDetailPage({
   if (!site) {
     return (
       <>
-        <PageHeader items={[{ label: "Not Found" }]} />
-        <div className="p-4 text-destructive">Site not found</div>
+        <PageHeader items={[{ label: "ไม่พบข้อมูล" }]} />
+        <div className="p-4 text-destructive">ไม่พบเว็บไซต์</div>
       </>
     )
   }
@@ -46,7 +46,7 @@ export default function SiteDetailPage({
       <PageHeader
         items={[
           { label: "Dashboard", href: NAV_ROUTES.DASHBOARD },
-          { label: "Sites", href: NAV_ROUTES.SITES.LIST },
+          { label: "เว็บไซต์", href: NAV_ROUTES.SITES.LIST },
           { label: site.name },
         ]}
       />

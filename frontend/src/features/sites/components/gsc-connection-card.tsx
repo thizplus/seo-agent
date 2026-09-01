@@ -39,7 +39,7 @@ export function GscConnectionCard({ site }: GscConnectionCardProps) {
   }
 
   const handleDisconnect = () => {
-    if (!confirm("Disconnect Google Search Console?")) return
+    if (!confirm("ยกเลิกการเชื่อมต่อ Google Search Console?")) return
     disconnectGsc.mutate(undefined, {
       onSuccess: () => window.location.reload(),
     })
@@ -61,12 +61,12 @@ export function GscConnectionCard({ site }: GscConnectionCardProps) {
               <BarChart3Icon className="size-5" />
               Google Search Console
             </CardTitle>
-            <CardDescription>Track rankings, impressions, CTR</CardDescription>
+            <CardDescription>ติดตามอันดับ จำนวนแสดงผล CTR</CardDescription>
           </div>
           {site.hasGsc && (
             <Button variant="outline" size="sm" onClick={handleDisconnect}>
               <UnlinkIcon className="mr-1 size-4" />
-              Disconnect
+              ยกเลิกการเชื่อมต่อ
             </Button>
           )}
         </div>
@@ -75,17 +75,17 @@ export function GscConnectionCard({ site }: GscConnectionCardProps) {
         {!site.hasGsc ? (
           <div className="text-center py-4">
             <BarChart3Icon className="mx-auto size-8 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">Connect GSC to track article rankings</p>
+            <p className="mt-2 text-muted-foreground">เชื่อมต่อ GSC เพื่อติดตามอันดับบทความ</p>
             <Button className="mt-3" onClick={handleConnect}>
               <LinkIcon className="mr-2 size-4" />
-              Connect Google Search Console
+              เชื่อมต่อ Google Search Console
             </Button>
           </div>
         ) : !site.gscSiteUrl ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-green-600">Connected! Select a property:</p>
+            <p className="text-green-600">เชื่อมต่อแล้ว! เลือก property:</p>
             {gscProps.isPending ? (
-              <p className="text-sm text-muted-foreground">Loading properties...</p>
+              <p className="text-muted-foreground">กำลังโหลด property...</p>
             ) : properties.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {properties.map((prop) => (
@@ -102,17 +102,17 @@ export function GscConnectionCard({ site }: GscConnectionCardProps) {
               </div>
             ) : (
               <div>
-                <p className="text-sm text-muted-foreground">No properties found.</p>
+                <p className="text-muted-foreground">ไม่พบ property</p>
                 <Button variant="outline" size="sm" className="mt-2" onClick={handleLoadProperties}>
-                  Reload Properties
+                  โหลด Property ใหม่
                 </Button>
               </div>
             )}
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Connected</Badge>
-            <span className="text-sm">{site.gscSiteUrl}</span>
+            <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">เชื่อมต่อแล้ว</Badge>
+            <span>{site.gscSiteUrl}</span>
           </div>
         )}
       </CardContent>

@@ -20,15 +20,15 @@ export function LoginForm({ className, error, ...props }: LoginFormProps) {
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Welcome to SEO Agents</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Sign in with your Google account to get started
+          <h1 className="text-2xl font-bold">ยินดีต้อนรับสู่ SEO Agents</h1>
+          <p className="text-base text-balance text-muted-foreground">
+            เข้าสู่ระบบด้วยบัญชี Google เพื่อเริ่มใช้งาน
           </p>
         </div>
         {error && (
           <p className="text-sm text-center text-destructive">{error}</p>
         )}
-        <FieldSeparator>Continue with</FieldSeparator>
+        <FieldSeparator>เข้าสู่ระบบด้วย</FieldSeparator>
         <Field>
           <Button onClick={handleGoogleLogin} variant="outline" className="w-full">
             <svg className="mr-2 size-4" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ export function LoginForm({ className, error, ...props }: LoginFormProps) {
                 fill="#EA4335"
               />
             </svg>
-            Sign in with Google
+            เข้าสู่ระบบด้วย Google
           </Button>
         </Field>
       </FieldGroup>

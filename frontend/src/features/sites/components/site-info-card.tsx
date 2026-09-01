@@ -97,11 +97,11 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={analyzeSite.isPending}>
                 {analyzeSite.isPending ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <ScanSearchIcon className="mr-1 size-4" />}
-                {analyzeSite.isPending ? "Analyzing..." : "Analyze"}
+                {analyzeSite.isPending ? "กำลังวิเคราะห์..." : "วิเคราะห์"}
               </Button>
               <Button variant="outline" size="sm" onClick={openEdit}>
                 <PencilIcon className="mr-1 size-4" />
-                Edit
+                แก้ไข
               </Button>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
             {site.hasWordPress && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">WP Connected</Badge>}
           </div>
           {site.description && (
-            <p className="mt-3 text-sm text-muted-foreground">{site.description}</p>
+            <p className="mt-3 text-muted-foreground">{site.description}</p>
           )}
         </CardContent>
       </Card>
@@ -122,8 +122,8 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Site</DialogTitle>
-            <DialogDescription>Update site settings and credentials</DialogDescription>
+            <DialogTitle>แก้ไขเว็บไซต์</DialogTitle>
+            <DialogDescription>อัปเดตการตั้งค่าและข้อมูลรับรอง</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
             <div className="grid gap-2">
@@ -143,7 +143,7 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
               <Input id="edit-industry" name="industry" value={editForm.industry} onChange={handleEditChange} />
             </div>
             <hr />
-            <p className="text-sm text-muted-foreground">Leave blank to keep current value</p>
+            <p className="text-sm text-muted-foreground">เว้นว่างเพื่อใช้ค่าเดิม</p>
             <div className="grid gap-2">
               <Label htmlFor="edit-llmProvider">LLM Provider</Label>
               <select
@@ -153,7 +153,7 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
                 onChange={(e) => setEditForm((prev) => ({ ...prev, llmProvider: e.target.value }))}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
               >
-                <option value="">Keep current</option>
+                <option value="">ใช้ค่าเดิม</option>
                 {LLM_PROVIDERS.map((p) => (
                   <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
@@ -161,24 +161,24 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-llmApiKey">API Key</Label>
-              <Input id="edit-llmApiKey" name="llmApiKey" type="password" value={editForm.llmApiKey} onChange={handleEditChange} placeholder="Leave blank to keep current" />
+              <Input id="edit-llmApiKey" name="llmApiKey" type="password" value={editForm.llmApiKey} onChange={handleEditChange} placeholder="เว้นว่างเพื่อใช้ค่าเดิม" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-wpUrl">WordPress URL</Label>
-              <Input id="edit-wpUrl" name="wpUrl" value={editForm.wpUrl} onChange={handleEditChange} placeholder="Leave blank to keep current" />
+              <Input id="edit-wpUrl" name="wpUrl" value={editForm.wpUrl} onChange={handleEditChange} placeholder="เว้นว่างเพื่อใช้ค่าเดิม" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-wpUsername">WP Username</Label>
-              <Input id="edit-wpUsername" name="wpUsername" value={editForm.wpUsername} onChange={handleEditChange} placeholder="Leave blank to keep current" />
+              <Input id="edit-wpUsername" name="wpUsername" value={editForm.wpUsername} onChange={handleEditChange} placeholder="เว้นว่างเพื่อใช้ค่าเดิม" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-wpAppPassword">WP Application Password</Label>
-              <Input id="edit-wpAppPassword" name="wpAppPassword" type="password" value={editForm.wpAppPassword} onChange={handleEditChange} placeholder="Leave blank to keep current" />
+              <Input id="edit-wpAppPassword" name="wpAppPassword" type="password" value={editForm.wpAppPassword} onChange={handleEditChange} placeholder="เว้นว่างเพื่อใช้ค่าเดิม" />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={updateSite.isPending}>
-                {updateSite.isPending ? "Saving..." : "Save Changes"}
+                {updateSite.isPending ? "กำลังบันทึก..." : "บันทึก"}
               </Button>
             </DialogFooter>
             {updateSite.isError && (
@@ -194,33 +194,33 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ScanSearchIcon className="size-5" />
-              Site Analysis
+              ผลวิเคราะห์เว็บไซต์
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <p className="text-sm text-muted-foreground">Business Type</p>
+                <p className="text-muted-foreground">ประเภทธุรกิจ</p>
                 <p className="font-medium">{String(analysisResult.businessType || "-")}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Industry</p>
+                <p className="text-muted-foreground">อุตสาหกรรม</p>
                 <p className="font-medium">{String(analysisResult.industry || "-")}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Pages Crawled</p>
+                <p className="text-muted-foreground">หน้าที่ Crawl</p>
                 <p className="font-medium">{String((analysisResult.crawlSummary as any)?.totalPages || 0)}</p>
               </div>
             </div>
             {analysisResult.brandVoice && (
               <div>
-                <p className="text-sm text-muted-foreground">Brand Voice</p>
-                <p className="text-sm mt-1">{String(analysisResult.brandVoice)}</p>
+                <p className="text-muted-foreground">เสียงแบรนด์</p>
+                <p className="mt-1">{String(analysisResult.brandVoice)}</p>
               </div>
             )}
             {analysisResult.seoScore && (
               <div>
-                <p className="text-sm text-muted-foreground mb-2">SEO Score</p>
+                <p className="text-muted-foreground mb-2">คะแนน SEO</p>
                 <div className="grid grid-cols-3 gap-4">
                   {["technical", "content", "onpage"].map((key) => (
                     <div key={key} className="text-center">
@@ -233,15 +233,15 @@ export function SiteInfoCard({ site }: SiteInfoCardProps) {
             )}
             {Array.isArray(analysisResult.recommendations) && analysisResult.recommendations.length > 0 && (
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Recommendations</p>
+                <p className="text-muted-foreground mb-2">คำแนะนำ</p>
                 <div className="flex flex-col gap-2">
                   {(analysisResult.recommendations as any[]).slice(0, 5).map((rec, i) => (
                     <div key={i} className="rounded-lg border p-3">
                       <div className="flex items-center gap-2">
                         <Badge variant={rec.priority === "high" ? "destructive" : "secondary"}>{rec.priority}</Badge>
-                        <span className="text-sm font-medium">{rec.title}</span>
+                        <span className="font-medium">{rec.title}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>
+                      <p className="text-muted-foreground mt-1">{rec.description}</p>
                     </div>
                   ))}
                 </div>

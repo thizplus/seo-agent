@@ -166,7 +166,7 @@ export default function ArticleDetailPage({
   }
 
   const handlePublish = () => {
-    if (confirm("Publish this article to WordPress?")) {
+    if (confirm("เผยแพร่บทความนี้ไปยัง WordPress?")) {
       publishArticle.mutate(id)
     }
   }
@@ -174,8 +174,8 @@ export default function ArticleDetailPage({
   if (isLoading) {
     return (
       <>
-        <PageHeader items={[{ label: "Loading..." }]} />
-        <div className="p-4 text-muted-foreground">Loading article...</div>
+        <PageHeader items={[{ label: "กำลังโหลด..." }]} />
+        <div className="p-4 text-base text-muted-foreground">กำลังโหลดบทความ...</div>
       </>
     )
   }
@@ -183,8 +183,8 @@ export default function ArticleDetailPage({
   if (!article) {
     return (
       <>
-        <PageHeader items={[{ label: "Not Found" }]} />
-        <div className="p-4 text-destructive">Article not found</div>
+        <PageHeader items={[{ label: "ไม่พบ" }]} />
+        <div className="p-4 text-base text-destructive">ไม่พบบทความ</div>
       </>
     )
   }
@@ -196,7 +196,7 @@ export default function ArticleDetailPage({
       <PageHeader
         items={[
           { label: "Dashboard", href: NAV_ROUTES.DASHBOARD },
-          { label: "Article Detail" },
+          { label: "รายละเอียดบทความ" },
         ]}
       />
       <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
@@ -204,8 +204,8 @@ export default function ArticleDetailPage({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold">{article.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {article.wordCount} words &middot; v{article.contentVersion}
+            <p className="mt-1 text-base text-muted-foreground">
+              {article.wordCount} คำ &middot; v{article.contentVersion}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -218,7 +218,7 @@ export default function ArticleDetailPage({
                   className={buttonVariants({ variant: "outline" })}
                 >
                   <ExternalLinkIcon className="mr-2 size-4" />
-                  View on Site
+                  ดูบนเว็บ
                 </a>
                 <Button
                   variant="outline"
@@ -230,7 +230,7 @@ export default function ArticleDetailPage({
                   ) : (
                     <SendIcon className="mr-2 size-4" />
                   )}
-                  Re-publish
+                  เผยแพร่ใหม่
                 </Button>
               </>
             ) : article.status === "completed" ? (
@@ -243,12 +243,12 @@ export default function ArticleDetailPage({
                 ) : (
                   <SendIcon className="mr-2 size-4" />
                 )}
-                Publish to WordPress
+                เผยแพร่ไปยัง WordPress
               </Button>
             ) : null}
             <Button variant="destructive" size="sm" onClick={handleDeleteArticle}>
               <Trash2Icon className="mr-1 size-4" />
-              Delete
+              ลบ
             </Button>
           </div>
         </div>
@@ -270,8 +270,8 @@ export default function ArticleDetailPage({
         </div>
 
         {publishArticle.isError && (
-          <p className="text-sm text-destructive">
-            Publish failed: {publishArticle.error.message}
+          <p className="text-base text-destructive">
+            เผยแพร่ล้มเหลว: {publishArticle.error.message}
           </p>
         )}
 
@@ -279,21 +279,21 @@ export default function ArticleDetailPage({
         {eeat && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">EEAT Score</CardTitle>
+              <CardTitle className="text-base">คะแนน EEAT</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {(
                   [
-                    ["Experience", eeat.experience],
-                    ["Expertise", eeat.expertise],
-                    ["Authority", eeat.authority],
-                    ["Trust", eeat.trust],
+                    ["ประสบการณ์", eeat.experience],
+                    ["ความเชี่ยวชาญ", eeat.expertise],
+                    ["ความน่าเชื่อถือ", eeat.authority],
+                    ["ความไว้วางใจ", eeat.trust],
                   ] as const
                 ).map(([label, score]) => (
                   <div key={label} className="text-center">
                     <div className="text-2xl font-bold">{score}/10</div>
-                    <div className="text-sm text-muted-foreground">{label}</div>
+                    <div className="text-base text-muted-foreground">{label}</div>
                   </div>
                 ))}
               </div>
@@ -308,16 +308,16 @@ export default function ArticleDetailPage({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <BarChart3Icon className="size-4" />
-                  Performance Metrics
+                  ตัวชี้วัดประสิทธิภาพ
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handleFetchMetrics} disabled={metricsLoading}>
                     {metricsLoading ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <BarChart3Icon className="mr-1 size-4" />}
-                    {metricsLoading ? "Loading..." : "Fetch Metrics"}
+                    {metricsLoading ? "กำลังโหลด..." : "ดึงข้อมูล"}
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleOptimize} disabled={optimizing}>
                     {optimizing ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <ZapIcon className="mr-1 size-4" />}
-                    {optimizing ? "Optimizing..." : "Optimize"}
+                    {optimizing ? "กำลังปรับปรุง..." : "ปรับปรุง"}
                   </Button>
                 </div>
               </div>
@@ -327,23 +327,23 @@ export default function ArticleDetailPage({
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold">{metrics.clicks || 0}</div>
-                    <div className="text-xs text-muted-foreground">Clicks</div>
+                    <div className="text-sm text-muted-foreground">คลิก</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{metrics.impressions || 0}</div>
-                    <div className="text-xs text-muted-foreground">Impressions</div>
+                    <div className="text-sm text-muted-foreground">แสดงผล</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{((metrics.ctr || 0) * 100).toFixed(1)}%</div>
-                    <div className="text-xs text-muted-foreground">CTR</div>
+                    <div className="text-sm text-muted-foreground">CTR</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{metrics.position || "-"}</div>
-                    <div className="text-xs text-muted-foreground">Avg Position</div>
+                    <div className="text-sm text-muted-foreground">อันดับเฉลี่ย</div>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Click "Fetch Metrics" to load GSC data (requires GSC connected)</p>
+                <p className="text-base text-muted-foreground">กด &quot;ดึงข้อมูล&quot; เพื่อโหลดข้อมูลจาก GSC (ต้องเชื่อมต่อ GSC ก่อน)</p>
               )}
             </CardContent>
           </Card>
@@ -355,10 +355,10 @@ export default function ArticleDetailPage({
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <HistoryIcon className="size-4" />
-                Version History
+                ประวัติเวอร์ชัน
               </CardTitle>
               <Button size="sm" variant="ghost" onClick={handleLoadVersions}>
-                Load Versions
+                โหลดเวอร์ชัน
               </Button>
             </div>
           </CardHeader>
@@ -371,14 +371,14 @@ export default function ArticleDetailPage({
                       <span className="font-medium">v{v.Version}</span>
                       <Badge variant="outline" className="ml-2 text-xs">{v.Action}</Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {v.WordCount} words &middot; {new Date(v.CreatedAt).toLocaleString()}
+                    <div className="text-base text-muted-foreground">
+                      {v.WordCount} คำ &middot; {new Date(v.CreatedAt).toLocaleString()}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No version history yet</p>
+              <p className="text-base text-muted-foreground">ยังไม่มีประวัติเวอร์ชัน</p>
             )}
           </CardContent>
         </Card>
@@ -390,9 +390,9 @@ export default function ArticleDetailPage({
               <CardTitle className="text-base">Meta Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">{article.metaDescription}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {article.metaDescription.length} characters
+              <p className="text-base">{article.metaDescription}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {article.metaDescription.length} ตัวอักษร
               </p>
             </CardContent>
           </Card>
@@ -404,22 +404,22 @@ export default function ArticleDetailPage({
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <ImageIcon className="size-4" />
-                Images
+                รูปภาพ
               </CardTitle>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSearchImages} disabled={searchingImages}>
                   {searchingImages ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <SearchIcon className="mr-1 size-4" />}
-                  {searchingImages ? "Searching..." : "Find Images"}
+                  {searchingImages ? "กำลังค้นหา..." : "ค้นหารูปภาพ"}
                 </Button>
                 {selectedImages.size > 0 && (
                   <Button size="sm" onClick={handleUploadSelected} disabled={uploadingImages}>
                     {uploadingImages ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <UploadIcon className="mr-1 size-4" />}
-                    {uploadingImages ? "Uploading..." : `Upload ${selectedImages.size} Selected`}
+                    {uploadingImages ? "กำลังอัปโหลด..." : `อัปโหลดที่เลือก (${selectedImages.size})`}
                   </Button>
                 )}
                 <Button size="sm" variant="outline" onClick={handleGenerateImages} disabled={generatingImages}>
                   {generatingImages ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <ImageIcon className="mr-1 size-4" />}
-                  {generatingImages ? "Generating..." : "AI Generate"}
+                  {generatingImages ? "กำลังสร้าง..." : "สร้างด้วย AI"}
                 </Button>
               </div>
             </div>
@@ -428,8 +428,8 @@ export default function ArticleDetailPage({
             {/* Search Results — เลือกก่อน upload */}
             {searchResults.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Click to select, star for featured image, then "Upload Selected"
+                <p className="text-base text-muted-foreground mb-2">
+                  คลิกเพื่อเลือก กดดาวเป็นรูปหลัก แล้วกด &quot;อัปโหลดที่เลือก&quot;
                 </p>
                 <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {searchResults.map((img, i) => (
@@ -462,7 +462,7 @@ export default function ArticleDetailPage({
                           <StarIcon className="size-3" />
                         </button>
                       )}
-                      <p className="text-xs text-muted-foreground p-1 truncate">{img.source || ""}</p>
+                      <p className="text-sm text-muted-foreground p-1 truncate">{img.source || ""}</p>
                     </div>
                   ))}
                 </div>
@@ -479,10 +479,10 @@ export default function ArticleDetailPage({
                         <img src={img.url} alt={img.alt_text} className="w-full aspect-video object-cover" />
                         <div className="p-2 flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-muted-foreground truncate">{img.alt_text || img.AltText}</p>
+                            <p className="text-sm text-muted-foreground truncate">{img.alt_text || img.AltText}</p>
                           </div>
                           <div className="flex gap-1 items-center shrink-0">
-                            {(img.role === "featured" || img.Role === "featured") && <Badge className="text-xs">Featured</Badge>}
+                            {(img.role === "featured" || img.Role === "featured") && <Badge className="text-sm">รูปหลัก</Badge>}
                             <button
                               onClick={() => handleDeleteImage(img.ID || img.id)}
                               className="text-destructive hover:bg-destructive/10 rounded p-1"
@@ -494,7 +494,7 @@ export default function ArticleDetailPage({
                         </div>
                       </>
                     ) : (
-                      <div className="p-4 text-sm text-destructive">Error: {img.error || "Failed"}</div>
+                      <div className="p-4 text-base text-destructive">ข้อผิดพลาด: {img.error || "ล้มเหลว"}</div>
                     )}
                   </div>
                 ))}
@@ -502,8 +502,8 @@ export default function ArticleDetailPage({
             )}
 
             {searchResults.length === 0 && images.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Click "Find Images" to search, select the ones you want, then upload.
+              <p className="text-base text-muted-foreground">
+                กด &quot;ค้นหารูปภาพ&quot; เลือกรูปที่ต้องการ แล้วอัปโหลด
               </p>
             )}
           </CardContent>
@@ -512,11 +512,11 @@ export default function ArticleDetailPage({
         {/* Content Preview */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Content Preview</CardTitle>
+            <CardTitle className="text-base">ตัวอย่างเนื้อหา</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-              {article.content || "No content available."}
+              {article.content || "ไม่มีเนื้อหา"}
             </div>
           </CardContent>
         </Card>

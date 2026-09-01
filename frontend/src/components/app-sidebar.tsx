@@ -26,19 +26,19 @@ import { authStore, type User } from "@/features/auth"
 
 const navItems = [
   {
-    title: "Dashboard",
+    title: "แดชบอร์ด",
     url: NAV_ROUTES.DASHBOARD,
     icon: <LayoutDashboardIcon />,
     isActive: true,
     items: [],
   },
   {
-    title: "Sites",
+    title: "เว็บไซต์",
     url: NAV_ROUTES.SITES.LIST,
     icon: <GlobeIcon />,
     items: [
-      { title: "All Sites", url: NAV_ROUTES.SITES.LIST },
-      { title: "Add Site", url: NAV_ROUTES.SITES.NEW },
+      { title: "เว็บไซต์ทั้งหมด", url: NAV_ROUTES.SITES.LIST },
+      { title: "เพิ่มเว็บไซต์", url: NAV_ROUTES.SITES.NEW },
     ],
   },
 ]
@@ -64,7 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">SEO Agents</span>
-                <span className="truncate text-xs">AI SEO Machine</span>
+                <span className="truncate text-xs">ระบบ SEO อัตโนมัติ</span>
               </div>
             </Link>
           </SidebarMenuItem>

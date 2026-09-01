@@ -26,13 +26,13 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileTextIcon className="size-5" />
-          Articles
+          บทความ
         </CardTitle>
-        <CardDescription>Generated articles for this site</CardDescription>
+        <CardDescription>บทความที่สร้างสำหรับเว็บไซต์นี้</CardDescription>
       </CardHeader>
       <CardContent>
         {!articles?.length ? (
-          <p className="text-sm text-muted-foreground">No articles yet. Generate one from a keyword above.</p>
+          <p className="text-muted-foreground">ยังไม่มีบทความ สร้างจากคีย์เวิร์ดด้านบน</p>
         ) : (
           <div className="flex flex-col gap-2">
             {articles.map((article) => (
@@ -42,7 +42,7 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
                 className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{article.title || "Generating..."}</p>
+                  <p className="font-medium truncate">{article.title || "กำลังสร้าง..."}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {(() => {
                       const kw = getKeyword(article.keywordId)
@@ -54,7 +54,7 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
                       ) : null
                     })()}
                     <span className="text-xs text-muted-foreground">
-                      {article.wordCount > 0 ? `${article.wordCount} words` : ""}
+                      {article.wordCount > 0 ? `${article.wordCount} คำ` : ""}
                       {article.createdAt && (
                         <span className="ml-1">
                           {new Date(article.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
@@ -74,7 +74,7 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
                     {article.status}
                   </Badge>
                   {article.publishStatus === "published" && (
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Published</Badge>
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">เผยแพร่แล้ว</Badge>
                   )}
                 </div>
               </Link>
