@@ -83,7 +83,7 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
         </CardContent>
       )}
 
-      {result && (
+      {result?.steps && (
         <CardContent>
           <div className="flex flex-col gap-3">
             {result.steps.map((step, i) => {
