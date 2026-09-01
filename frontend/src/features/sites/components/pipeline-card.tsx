@@ -28,10 +28,19 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
   const pipeline = useRunPipeline(siteId)
   const [result, setResult] = useState<PipelineResult | null>(null)
 
+  const [bgMessage, setBgMessage] = useState<string | null>(null)
+
   const handleRun = () => {
     setResult(null)
+    setBgMessage(null)
     pipeline.mutate(3, {
-      onSuccess: (data) => setResult(data),
+      onSuccess: (data) => {
+        if (data?.message) {
+          setBgMessage(data.message)
+        } else {
+          setResult(data)
+        }
+      },
       onError: (err) => alert(err.message),
     })
   }
@@ -60,12 +69,17 @@ export function PipelineCard({ siteId }: PipelineCardProps) {
         </div>
       </CardHeader>
 
-      {pipeline.isPending && (
+      {(pipeline.isPending || bgMessage) && (
         <CardContent>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 text-muted-foreground">
             <Loader2Icon className="size-4 animate-spin" />
-            กำลังทำงาน... (วิเคราะห์ → ค้นหา → สร้างบทความ) อาจใช้เวลา 3-5 นาที
+            {bgMessage || "กำลังทำงาน... (วิเคราะห์ → ค้นหา → สร้างบทความ) อาจใช้เวลา 3-5 นาที"}
           </div>
+          {bgMessage && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              สามารถ refresh หน้านี้เพื่อดูผลลัพธ์ได้เลย
+            </p>
+          )}
         </CardContent>
       )}
 

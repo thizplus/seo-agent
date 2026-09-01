@@ -219,7 +219,7 @@ func (s *siteServiceImpl) RunPipeline(ctx context.Context, id uuid.UUID) (map[st
 	// Step 1: Crawl Pages + Extract Keywords per Page
 	slog.Info("Pipeline: Crawl pages", "site", site.Name)
 	crawlResp, err := s.aiEngine.CrawlPages(ctx, map[string]any{
-		"url": site.URL, "site_name": site.Name, "max_pages": 50,
+		"url": site.URL, "site_name": site.Name, "max_pages": 100,
 		"llm_provider": site.LLMProvider, "llm_api_key": site.LLMApiKey,
 	})
 	if err != nil {

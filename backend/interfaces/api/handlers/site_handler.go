@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
@@ -152,11 +153,23 @@ func (h *SiteHandler) RunPipeline(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid site ID")
 	}
-	data, err := h.siteService.RunPipeline(c.UserContext(), id)
-	if err != nil {
-		return utils.BadRequestResponse(c, err.Error())
-	}
-	return utils.SuccessResponse(c, data)
+
+	// ตอบ 202 ทันที แล้วทำงานใน background
+	go func() {
+		ctx := context.Background()
+		slog.Info("Pipeline started (background)", "site_id", id)
+		_, err := h.siteService.RunPipeline(ctx, id)
+		if err != nil {
+			slog.Error("Pipeline failed", "site_id", id, "error", err)
+		} else {
+			slog.Info("Pipeline completed", "site_id", id)
+		}
+	}()
+
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"success": true,
+		"data":    fiber.Map{"message": "Pipeline กำลังทำงาน กรุณารอสักครู่แล้ว refresh หน้า"},
+	})
 }
 
 func (h *SiteHandler) Delete(c *fiber.Ctx) error {
