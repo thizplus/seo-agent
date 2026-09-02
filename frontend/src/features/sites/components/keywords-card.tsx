@@ -4,10 +4,19 @@ import { useState } from "react"
 import { useDiscoverKeywords } from "../hooks"
 import { useKeywordList, useCreateKeyword, useAnalyzeSERP } from "@/features/keywords"
 import { useGenerateArticle } from "@/features/articles"
+import { TONE_OVERRIDE_OPTIONS } from "@/constants/ai-settings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { KeyIcon, PlusIcon, SparklesIcon, Loader2Icon, ScanSearchIcon, SearchIcon } from "lucide-react"
 
 interface KeywordsCardProps {
@@ -23,6 +32,11 @@ export function KeywordsCard({ siteId }: KeywordsCardProps) {
 
   const [newKeyword, setNewKeyword] = useState("")
   const [discoveries, setDiscoveries] = useState<any[]>([])
+
+  // Generate dialog state
+  const [genDialog, setGenDialog] = useState(false)
+  const [genKeyword, setGenKeyword] = useState<{ id: string; keyword: string } | null>(null)
+  const [genForm, setGenForm] = useState({ customTitle: "", writingTone: "", contentGuide: "" })
 
   const handleAddKeyword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,6 +56,29 @@ export function KeywordsCard({ siteId }: KeywordsCardProps) {
   const handleAddDiscoveredKeyword = async (keyword: string) => {
     await createKeyword.mutateAsync({ keyword })
     setDiscoveries((prev) => prev.filter((d) => d.keyword !== keyword))
+  }
+
+  const openGenDialog = (kw: { id: string; keyword: string }) => {
+    setGenKeyword(kw)
+    setGenForm({ customTitle: "", writingTone: "", contentGuide: "" })
+    setGenDialog(true)
+  }
+
+  const handleGenerate = () => {
+    if (!genKeyword) return
+    generateArticle.mutate(
+      {
+        siteId,
+        keywordId: genKeyword.id,
+        customTitle: genForm.customTitle || undefined,
+        writingTone: genForm.writingTone || undefined,
+        contentGuide: genForm.contentGuide || undefined,
+      },
+      {
+        onSuccess: () => setGenDialog(false),
+        onError: (err) => alert(err.message),
+      }
+    )
   }
 
   return (
@@ -119,10 +156,10 @@ export function KeywordsCard({ siteId }: KeywordsCardProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => generateArticle.mutate({ siteId, keywordId: kw.id })}
+                          onClick={() => openGenDialog({ id: kw.id, keyword: kw.keyword })}
                           disabled={generateArticle.isPending}
                         >
-                          {generateArticle.isPending ? <Loader2Icon className="mr-1 size-4 animate-spin" /> : <SparklesIcon className="mr-1 size-4" />}
+                          <SparklesIcon className="mr-1 size-4" />
                           สร้างบทความ
                         </Button>
                       </td>
@@ -134,6 +171,57 @@ export function KeywordsCard({ siteId }: KeywordsCardProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Generate Article Dialog */}
+      <Dialog open={genDialog} onOpenChange={setGenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>สร้างบทความ</DialogTitle>
+            <DialogDescription>
+              Keyword: <span className="font-medium text-foreground">{genKeyword?.keyword}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">หัวข้อบทความ</label>
+              <Input
+                placeholder="ไม่บังคับ — AI จะตั้งให้"
+                value={genForm.customTitle}
+                onChange={(e) => setGenForm({ ...genForm, customTitle: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">อารมณ์การเขียน</label>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                value={genForm.writingTone}
+                onChange={(e) => setGenForm({ ...genForm, writingTone: e.target.value })}
+              >
+                {TONE_OVERRIDE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">แนวทางเนื้อหา</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="ไม่บังคับ — ใช้ค่าเริ่มต้นของ site"
+                rows={3}
+                value={genForm.contentGuide}
+                onChange={(e) => setGenForm({ ...genForm, contentGuide: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGenDialog(false)}>ยกเลิก</Button>
+            <Button onClick={handleGenerate} disabled={generateArticle.isPending}>
+              {generateArticle.isPending && <Loader2Icon className="mr-1 size-4 animate-spin" />}
+              สร้างบทความ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Keyword Discoveries */}
       {discoveries.length > 0 && (

@@ -28,4 +28,7 @@ export interface EEATScore {
 export interface GenerateArticleRequest {
   siteId: string
   keywordId: string
+  customTitle?: string
+  writingTone?: string
+  contentGuide?: string
 }
