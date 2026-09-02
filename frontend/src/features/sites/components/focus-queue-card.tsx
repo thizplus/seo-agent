@@ -24,14 +24,7 @@ interface FocusQueueCardProps {
 
 const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "", overrideTone: "", overrideGuide: "" }
 
-const TONE_OPTIONS = [
-  { value: "", label: "ใช้ค่าเริ่มต้นของ site" },
-  { value: "กันเอง สนุก ใช้ภาษาง่ายๆ", label: "กันเอง สนุก" },
-  { value: "ทางการ มืออาชีพ น่าเชื่อถือ", label: "ทางการ มืออาชีพ" },
-  { value: "เน้นขาย กระตุ้นซื้อ มี CTA ทุกหัวข้อ", label: "เน้นขาย" },
-  { value: "ให้ความรู้ อธิบายละเอียด เหมือนครูสอน", label: "ให้ความรู้" },
-  { value: "รีวิว เปรียบเทียบ ตรงไปตรงมา", label: "รีวิว เปรียบเทียบ" },
-]
+import { TONE_OVERRIDE_OPTIONS } from "@/constants/ai-settings"
 
 export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const { data: queue, isLoading } = useFocusQueue(siteId)
@@ -197,7 +190,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                 value={addForm.overrideTone}
                 onChange={(e) => setAddForm({ ...addForm, overrideTone: e.target.value })}
               >
-                {TONE_OPTIONS.map(opt => (
+                {TONE_OVERRIDE_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
