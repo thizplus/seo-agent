@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { KeyIcon, PlusIcon, SparklesIcon, Loader2Icon, ScanSearchIcon, SearchIcon } from "lucide-react"
 
 interface KeywordsCardProps {
@@ -192,15 +193,18 @@ export function KeywordsCard({ siteId }: KeywordsCardProps) {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">อารมณ์การเขียน</label>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                value={genForm.writingTone}
-                onChange={(e) => setGenForm({ ...genForm, writingTone: e.target.value })}
-              >
-                {TONE_OVERRIDE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <Select value={genForm.writingTone} onValueChange={(v) => setGenForm({ ...genForm, writingTone: v ?? "" })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="ใช้ค่าเริ่มต้นของ site" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TONE_OVERRIDE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value || "default"} value={opt.value || " "}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">แนวทางเนื้อหา</label>

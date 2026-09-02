@@ -25,6 +25,7 @@ interface FocusQueueCardProps {
 const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "", overrideTone: "", overrideGuide: "" }
 
 import { TONE_OVERRIDE_OPTIONS } from "@/constants/ai-settings"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const { data: queue, isLoading } = useFocusQueue(siteId)
@@ -185,15 +186,18 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
             </div>
             <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
               <span className="text-sm">อารมณ์</span>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                value={addForm.overrideTone}
-                onChange={(e) => setAddForm({ ...addForm, overrideTone: e.target.value })}
-              >
-                {TONE_OVERRIDE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <Select value={addForm.overrideTone} onValueChange={(v) => setAddForm({ ...addForm, overrideTone: v ?? "" })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="ใช้ค่าเริ่มต้นของ site" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TONE_OVERRIDE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value || "default"} value={opt.value || " "}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-[80px_1fr] gap-2 items-start">
               <span className="text-sm mt-2">แนวทาง</span>
