@@ -219,10 +219,10 @@ func (s *Scheduler) runContentGeneration() {
 			}
 		}
 
-		// Generate สำหรับ keywords ที่ยังไม่มีบทความ (max 3/day, delay 60s)
+		// Generate สำหรับ keywords ที่ยังไม่มีบทความ (max 1/site/day)
 		generated := 0
 		for _, kw := range allKWs {
-			if generated >= 3 {
+			if generated >= 1 {
 				break
 			}
 			if usedKWIDs[kw.ID.String()] {
