@@ -8,6 +8,8 @@ class GenerateArticleRequest(BaseModel):
     site_name: str = ""
     brand_voice: str = ""
     industry: str = ""
+    secondary_keywords: list[str] = []
+    pillar_url: str = ""
     llm_provider: str = "gemini"
     llm_api_key: str = ""
 

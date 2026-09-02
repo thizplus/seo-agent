@@ -61,6 +61,8 @@ async def generate_article(req: GenerateArticleRequest):
     result = await writer.generate(
         keyword=req.keyword, site_url=req.site_url, site_name=req.site_name,
         brand_voice=req.brand_voice, industry=req.industry,
+        secondary_keywords=req.secondary_keywords or None,
+        pillar_url=req.pillar_url,
     )
     return GenerateArticleResponse(**result)
 

@@ -21,6 +21,8 @@ class ArticleWriter:
         site_name: str = "",
         brand_voice: str = "",
         industry: str = "",
+        secondary_keywords: list[str] = None,
+        pillar_url: str = "",
     ) -> dict:
         serp_data = await self.serp.analyze(keyword)
         skill_context = self.skill_router.get_context("article_writing")
@@ -33,6 +35,24 @@ class ArticleWriter:
 
 {f"## Brand Voice{chr(10)}{brand_voice}" if brand_voice else ""}"""
 
+        # สร้างส่วน secondary keywords + pillar URL
+        secondary_section = ""
+        if secondary_keywords:
+            kw_list = ', '.join(secondary_keywords)
+            secondary_section = f"""
+## Keywords รอง (ต้องใช้เป็น H2/H3 ในบทความ)
+{kw_list}
+- ใช้ keyword รองเหล่านี้เป็นหัวข้อ H2 หรือ H3 ในบทความอย่างน้อย 1 ครั้งต่อ keyword
+- กระจาย keyword รองในเนื้อหาอย่างเป็นธรรมชาติ"""
+
+        pillar_section = ""
+        if pillar_url:
+            pillar_section = f"""
+## Internal Linking
+- ใส่ internal link กลับไปยังหน้าหลัก: {pillar_url}
+- ใช้ anchor text ที่เกี่ยวข้องกับ keyword หลัก "{keyword}"
+- ใส่ลิงก์อย่างน้อย 1-2 จุดในเนื้อหา"""
+
         article_prompt = f"""เขียนบทความ SEO สำหรับ keyword: "{keyword}"
 
 ## ข้อมูลเว็บไซต์
@@ -44,6 +64,8 @@ class ArticleWriter:
 - Search Intent: {serp_data.get('intent', 'informational')}
 - Headings ที่พบบ่อย: {', '.join(serp_data.get('common_headings', [])[:10]) or 'N/A'}
 - คู่แข่ง Top 5: {', '.join(r.get('title','')[:30] for r in serp_data.get('results', [])[:5]) or 'N/A'}
+{secondary_section}
+{pillar_section}
 
 ## Requirements
 1. เขียน {target_words}+ คำ (ต้องมากกว่าคู่แข่ง)
