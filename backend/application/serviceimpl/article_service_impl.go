@@ -74,6 +74,9 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 	if req.PillarURL != "" {
 		aiReq["pillar_url"] = req.PillarURL
 	}
+	if req.CustomPrompt != "" {
+		aiReq["custom_prompt"] = req.CustomPrompt
+	}
 	aiResp, err := s.aiEngine.GenerateArticle(ctx, aiReq)
 	if err != nil {
 		s.articleRepo.Delete(ctx, article.ID)

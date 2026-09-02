@@ -10,6 +10,7 @@ class GenerateArticleRequest(BaseModel):
     industry: str = ""
     secondary_keywords: list[str] = []
     pillar_url: str = ""
+    custom_prompt: str = ""
     llm_provider: str = "gemini"
     llm_api_key: str = ""
 

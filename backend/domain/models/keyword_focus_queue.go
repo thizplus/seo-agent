@@ -14,6 +14,7 @@ type KeywordFocusQueue struct {
 	PillarURL         string     `gorm:"size:500" json:"pillarUrl"`
 	PrimaryKeyword    string     `gorm:"size:255;not null;uniqueIndex:idx_site_primary_kw" json:"primaryKeyword"`
 	SecondaryKeywords string     `gorm:"type:text" json:"secondaryKeywords"`
+	CustomPrompt      string     `gorm:"type:text" json:"customPrompt"`
 	Status            string     `gorm:"size:50;default:pending;index" json:"status"`
 	ArticleID         *uuid.UUID `gorm:"type:uuid" json:"articleId"`
 	ErrorMessage      string     `gorm:"type:text" json:"errorMessage"`

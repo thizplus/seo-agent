@@ -23,6 +23,7 @@ class ArticleWriter:
         industry: str = "",
         secondary_keywords: list[str] = None,
         pillar_url: str = "",
+        custom_prompt: str = "",
     ) -> dict:
         serp_data = await self.serp.analyze(keyword)
         skill_context = self.skill_router.get_context("article_writing")
@@ -66,6 +67,10 @@ class ArticleWriter:
 - คู่แข่ง Top 5: {', '.join(r.get('title','')[:30] for r in serp_data.get('results', [])[:5]) or 'N/A'}
 {secondary_section}
 {pillar_section}
+{f"""
+## คำสั่งพิเศษ (สำคัญมาก — ต้องปฏิบัติตาม)
+{custom_prompt}
+""" if custom_prompt else ""}
 
 ## Requirements
 1. เขียน {target_words}+ คำ (ต้องมากกว่าคู่แข่ง)

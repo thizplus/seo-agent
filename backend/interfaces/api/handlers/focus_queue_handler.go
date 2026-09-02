@@ -44,6 +44,7 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PillarURL         string `json:"pillarUrl"`
 		PrimaryKeyword    string `json:"primaryKeyword"`
 		SecondaryKeywords string `json:"secondaryKeywords"`
+		CustomPrompt      string `json:"customPrompt"`
 	}
 	if err := c.BodyParser(&body); err != nil || body.PrimaryKeyword == "" {
 		return utils.BadRequestResponse(c, "กรุณาระบุ keyword หลัก")
@@ -55,6 +56,7 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PillarURL:         body.PillarURL,
 		PrimaryKeyword:    body.PrimaryKeyword,
 		SecondaryKeywords: body.SecondaryKeywords,
+		CustomPrompt:      body.CustomPrompt,
 		Status:            "pending",
 	}
 	if err := h.queueRepo.Create(c.UserContext(), item); err != nil {
@@ -80,6 +82,7 @@ func (h *FocusQueueHandler) ImportItems(c *fiber.Ctx) error {
 			PillarURL         string `json:"pillarUrl"`
 			PrimaryKeyword    string `json:"primaryKeyword"`
 			SecondaryKeywords string `json:"secondaryKeywords"`
+			CustomPrompt      string `json:"customPrompt"`
 		} `json:"keywords"`
 	}
 	if err := c.BodyParser(&body); err != nil || len(body.Keywords) == 0 {
@@ -102,6 +105,7 @@ func (h *FocusQueueHandler) ImportItems(c *fiber.Ctx) error {
 			PillarURL:         kw.PillarURL,
 			PrimaryKeyword:    kw.PrimaryKeyword,
 			SecondaryKeywords: kw.SecondaryKeywords,
+			CustomPrompt:      kw.CustomPrompt,
 			Status:            "pending",
 		})
 	}

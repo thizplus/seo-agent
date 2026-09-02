@@ -36,14 +36,14 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
 
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
-  const [addForm, setAddForm] = useState({ priority: 1, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "" })
+  const [addForm, setAddForm] = useState({ priority: 1, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customPrompt: "" })
   const [csvText, setCsvText] = useState("")
 
   const handleAdd = () => {
     if (!addForm.primaryKeyword.trim()) return
     addItem.mutate(addForm, {
       onSuccess: () => {
-        setAddForm({ priority: (queue?.length || 0) + 2, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "" })
+        setAddForm({ priority: (queue?.length || 0) + 2, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customPrompt: "" })
         setShowAdd(false)
       },
       onError: (err) => alert(err.message),
@@ -170,6 +170,10 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
               <span className="text-sm">URL หลัก</span>
               <Input placeholder="/path/" value={addForm.pillarUrl} onChange={(e) => setAddForm({ ...addForm, pillarUrl: e.target.value })} />
             </div>
+            <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
+              <span className="text-sm">Prompt</span>
+              <Input placeholder="เช่น เขียนแบบ buying guide, เน้นเปรียบเทียบราคา (ไม่บังคับ)" value={addForm.customPrompt} onChange={(e) => setAddForm({ ...addForm, customPrompt: e.target.value })} />
+            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>ยกเลิก</Button>
               <Button size="sm" onClick={handleAdd} disabled={addItem.isPending}>
@@ -255,6 +259,9 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                 )}
                 {item.pillarUrl && (
                   <p className="text-xs text-muted-foreground mt-0.5 ml-6">{item.pillarUrl}</p>
+                )}
+                {item.customPrompt && (
+                  <p className="text-xs text-amber-600 mt-0.5 ml-6">Prompt: {item.customPrompt}</p>
                 )}
                 {item.errorMessage && (
                   <p className="text-sm text-red-500 mt-1 ml-6">{item.errorMessage}</p>
