@@ -67,6 +67,32 @@ export interface SiteMember {
   createdAt?: string
 }
 
+export interface FocusQueueItem {
+  id: string
+  siteId: string
+  priority: number
+  pillarUrl: string
+  primaryKeyword: string
+  secondaryKeywords: string
+  status: "pending" | "completed" | "failed" | "skipped"
+  articleId?: string
+  errorMessage?: string
+  retryCount: number
+  completedAt?: string
+  createdAt: string
+}
+
+export interface FocusQueueStatus {
+  total: number
+  completed: number
+  pending: number
+  failed: number
+  skipped: number
+  progress: string
+  estimatedDaysLeft: number
+  nextKeyword?: { priority: number; primaryKeyword: string; secondaryKeywords: string }
+}
+
 export interface CompetitorResult {
   url: string
   summary: string

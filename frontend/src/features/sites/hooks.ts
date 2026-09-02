@@ -152,3 +152,80 @@ export function useRemoveMember(siteId: string) {
     },
   })
 }
+
+// --- Focus Queue ---
+
+export const focusQueueKeys = {
+  all: ["focusQueue"] as const,
+  list: (siteId: string) => [...focusQueueKeys.all, "list", siteId] as const,
+  status: (siteId: string) => [...focusQueueKeys.all, "status", siteId] as const,
+}
+
+export function useFocusQueue(siteId: string) {
+  return useQuery({
+    queryKey: focusQueueKeys.list(siteId),
+    queryFn: () => siteService.getFocusQueue(siteId),
+  })
+}
+
+export function useFocusQueueStatus(siteId: string) {
+  return useQuery({
+    queryKey: focusQueueKeys.status(siteId),
+    queryFn: () => siteService.getFocusQueueStatus(siteId),
+  })
+}
+
+function invalidateFocusQueue(queryClient: ReturnType<typeof useQueryClient>, siteId: string) {
+  queryClient.invalidateQueries({ queryKey: focusQueueKeys.list(siteId) })
+  queryClient.invalidateQueries({ queryKey: focusQueueKeys.status(siteId) })
+}
+
+export function useAddFocusQueueItem(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }) =>
+      siteService.addFocusQueueItem(siteId, data),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useImportFocusQueue(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (keywords: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }[]) =>
+      siteService.importFocusQueue(siteId, keywords),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useDeleteFocusQueueItem(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (queueId: string) => siteService.deleteFocusQueueItem(siteId, queueId),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useSkipFocusQueueItem(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (queueId: string) => siteService.skipFocusQueueItem(siteId, queueId),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useRetryFocusQueueItem(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (queueId: string) => siteService.retryFocusQueueItem(siteId, queueId),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useResetFocusQueue(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => siteService.resetFocusQueue(siteId),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}

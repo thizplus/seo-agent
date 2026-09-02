@@ -27,6 +27,13 @@ export const API_ROUTES = {
     RUN_PIPELINE: (id: string) => `${API_BASE}/api/v1/sites/${id}/pipeline`,
     MEMBERS: (id: string) => `${API_BASE}/api/v1/sites/${id}/members`,
     REMOVE_MEMBER: (id: string, memberId: string) => `${API_BASE}/api/v1/sites/${id}/members/${memberId}`,
+    FOCUS_QUEUE: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue`,
+    FOCUS_QUEUE_IMPORT: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/import`,
+    FOCUS_QUEUE_STATUS: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/status`,
+    FOCUS_QUEUE_RESET: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/reset`,
+    FOCUS_QUEUE_ITEM: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}`,
+    FOCUS_QUEUE_SKIP: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/skip`,
+    FOCUS_QUEUE_RETRY: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/retry`,
   },
 
   // Pages

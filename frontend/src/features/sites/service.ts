@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult, SiteMember } from "./types"
+import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult, SiteMember, FocusQueueItem, FocusQueueStatus } from "./types"
 
 export const siteService = {
   async getAll(): Promise<Site[]> {
@@ -81,5 +81,41 @@ export const siteService = {
 
   async removeMember(id: string, memberId: string): Promise<void> {
     await apiClient.delete(API_ROUTES.SITES.REMOVE_MEMBER(id, memberId))
+  },
+
+  async getFocusQueue(id: string): Promise<FocusQueueItem[]> {
+    const res = await apiClient.get<{ data: FocusQueueItem[] }>(API_ROUTES.SITES.FOCUS_QUEUE(id))
+    return res.data.data || []
+  },
+
+  async getFocusQueueStatus(id: string): Promise<FocusQueueStatus> {
+    const res = await apiClient.get<{ data: FocusQueueStatus }>(API_ROUTES.SITES.FOCUS_QUEUE_STATUS(id))
+    return res.data.data
+  },
+
+  async addFocusQueueItem(id: string, data: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }): Promise<FocusQueueItem> {
+    const res = await apiClient.post<{ data: FocusQueueItem }>(API_ROUTES.SITES.FOCUS_QUEUE(id), data)
+    return res.data.data
+  },
+
+  async importFocusQueue(id: string, keywords: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }[]): Promise<{ imported: number }> {
+    const res = await apiClient.post<{ data: { imported: number } }>(API_ROUTES.SITES.FOCUS_QUEUE_IMPORT(id), { keywords })
+    return res.data.data
+  },
+
+  async deleteFocusQueueItem(id: string, queueId: string): Promise<void> {
+    await apiClient.delete(API_ROUTES.SITES.FOCUS_QUEUE_ITEM(id, queueId))
+  },
+
+  async skipFocusQueueItem(id: string, queueId: string): Promise<void> {
+    await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_SKIP(id, queueId))
+  },
+
+  async retryFocusQueueItem(id: string, queueId: string): Promise<void> {
+    await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RETRY(id, queueId))
+  },
+
+  async resetFocusQueue(id: string): Promise<void> {
+    await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RESET(id))
   },
 }

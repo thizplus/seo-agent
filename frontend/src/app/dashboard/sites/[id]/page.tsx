@@ -14,6 +14,7 @@ import {
   CompetitorAnalysisCard,
   ArticlesCard,
   MembersCard,
+  FocusQueueCard,
 } from "@/features/sites"
 
 export default function SiteDetailPage({
@@ -54,6 +55,7 @@ export default function SiteDetailPage({
       <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
         <SiteInfoCard site={site} />
         <PipelineCard siteId={id} />
+        <FocusQueueCard siteId={id} />
         <PagesCard siteId={id} />
         <GscConnectionCard site={site} />
         <KeywordsCard siteId={id} />
