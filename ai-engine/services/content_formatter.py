@@ -8,6 +8,12 @@ class GutenbergFormatter:
 
     def format(self, markdown: str) -> str:
         """แปลง Markdown → Gutenberg block HTML"""
+        # แปลง {{youtube:VIDEO_ID}} → Gutenberg embed block ก่อน split lines
+        markdown = re.sub(
+            r'\{\{youtube:([a-zA-Z0-9_-]+)\}\}',
+            r'{{__YT_EMBED__:\1}}',
+            markdown
+        )
         lines = markdown.strip().split("\n")
         blocks = []
         i = 0
@@ -75,6 +81,13 @@ class GutenbergFormatter:
                 blocks.append(self._make_table(table_lines))
                 continue
 
+            # YouTube embed
+            yt_match = re.match(r"\{\{__YT_EMBED__:([a-zA-Z0-9_-]+)\}\}", line)
+            if yt_match:
+                blocks.append(self._make_youtube(yt_match.group(1)))
+                i += 1
+                continue
+
             # Image (already in markdown)
             img_match = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", line)
             if img_match:
@@ -107,6 +120,8 @@ class GutenbergFormatter:
         if line.startswith("```"):
             return True
         if line.startswith("!["):
+            return True
+        if line.startswith("{{__YT_EMBED__:"):
             return True
         return False
 
@@ -143,6 +158,16 @@ class GutenbergFormatter:
 
     def _make_image(self, url: str, alt: str) -> str:
         return f'<!-- wp:image -->\n<figure class="wp-block-image size-large"><img src="{url}" alt="{alt}" /></figure>\n<!-- /wp:image -->'
+
+    def _make_youtube(self, video_id: str) -> str:
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        return (
+            f'<!-- wp:embed {{"url":"{url}","type":"video","providerNameSlug":"youtube"}} -->\n'
+            f'<figure class="wp-block-embed is-type-video is-provider-youtube">'
+            f'<div class="wp-block-embed__wrapper">{url}</div>'
+            f'</figure>\n'
+            f'<!-- /wp:embed -->'
+        )
 
     def _make_table(self, lines: list[str]) -> str:
         if len(lines) < 2:

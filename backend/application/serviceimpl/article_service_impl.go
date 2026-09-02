@@ -440,6 +440,48 @@ func (s *articleServiceImpl) DeleteArticleFull(ctx context.Context, id uuid.UUID
 	return s.articleRepo.Delete(ctx, id)
 }
 
+func (s *articleServiceImpl) UpdateContent(ctx context.Context, id uuid.UUID, req *dto.UpdateContentRequest) (*models.Article, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("article not found: %w", err)
+	}
+
+	if req.Title != "" {
+		article.Title = req.Title
+	}
+	if req.Content != "" {
+		article.Content = req.Content
+		// นับ word count ใหม่
+		article.WordCount = countWords(req.Content)
+	}
+	if req.MetaDescription != "" {
+		article.MetaDescription = req.MetaDescription
+	}
+
+	article.ContentVersion++
+	if err := s.articleRepo.Update(ctx, article); err != nil {
+		return nil, fmt.Errorf("failed to update article: %w", err)
+	}
+
+	s.saveVersion(article, "manual_edit")
+	slog.InfoContext(ctx, "Article content updated", "article_id", id)
+	return article, nil
+}
+
+func countWords(s string) int {
+	count := 0
+	inWord := false
+	for _, r := range s {
+		if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
+			inWord = false
+		} else if !inWord {
+			inWord = true
+			count++
+		}
+	}
+	return count
+}
+
 func (s *articleServiceImpl) saveVersion(article *models.Article, action string) {
 	version := models.ArticleVersion{
 		ArticleID: article.ID,

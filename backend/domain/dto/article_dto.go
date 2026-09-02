@@ -18,6 +18,12 @@ type GenerateArticleRequest struct {
 	WritingTone       string   `json:"writingTone,omitempty"`
 }
 
+type UpdateContentRequest struct {
+	Title           string `json:"title"`
+	Content         string `json:"content"`
+	MetaDescription string `json:"metaDescription"`
+}
+
 type PublishArticleRequest struct {
 	ScheduleAt *time.Time `json:"scheduleAt,omitempty"`
 }

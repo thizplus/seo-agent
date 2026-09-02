@@ -83,6 +83,7 @@ func Setup(app *fiber.App, c *di.Container) {
 	articles.Post("/:id/upload-images", articleHandler.UploadSelectedImages)
 	articles.Post("/:id/find-images", articleHandler.FindImages)
 	articles.Post("/:id/generate-images", articleHandler.GenerateImages)
+	articles.Put("/:id/content", articleHandler.UpdateContent)
 	articles.Post("/:id/publish", articleHandler.Publish)
 	articles.Delete("/:id", articleHandler.DeleteArticle)
 	articles.Delete("/:id/images/:imageId", articleHandler.DeleteImage)

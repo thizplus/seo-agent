@@ -68,6 +68,17 @@ export const articleService = {
     return res.data.data
   },
 
+  async updateContent(
+    id: string,
+    data: { title: string; content: string; metaDescription: string }
+  ): Promise<Article> {
+    const res = await apiClient.put<{ data: Article }>(
+      API_ROUTES.ARTICLES.UPDATE_CONTENT(id),
+      data
+    )
+    return res.data.data
+  },
+
   async publish(id: string): Promise<Article> {
     const res = await apiClient.post<{ data: Article }>(
       API_ROUTES.ARTICLES.PUBLISH(id)

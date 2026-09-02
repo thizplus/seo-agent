@@ -1,3 +1,7 @@
 export * from "./types"
 export * from "./service"
 export * from "./hooks"
+export { MarkdownEditor } from "./components/markdown-editor"
+export { MarkdownPreview } from "./components/markdown-preview"
+export { ImageInsertDialog } from "./components/image-insert-dialog"
+export { VideoInsertDialog } from "./components/video-insert-dialog"

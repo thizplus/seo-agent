@@ -36,6 +36,24 @@ export function useGenerateArticle() {
   })
 }
 
+export function useUpdateContent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string
+      data: { title: string; content: string; metaDescription: string }
+    }) => articleService.updateContent(id, data),
+    onSuccess: (article) => {
+      queryClient.invalidateQueries({
+        queryKey: articleKeys.detail(article.id),
+      })
+    },
+  })
+}
+
 export function usePublishArticle() {
   const queryClient = useQueryClient()
   return useMutation({

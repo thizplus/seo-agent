@@ -37,6 +37,26 @@ func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
 	return utils.CreatedResponse(c, dto.ArticleToResponse(article))
 }
 
+func (h *ArticleHandler) UpdateContent(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+
+	var req dto.UpdateContentRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.BadRequestResponse(c, "Invalid request body")
+	}
+
+	article, err := h.articleService.UpdateContent(c.UserContext(), id, &req)
+	if err != nil {
+		slog.Error("Update content failed", "error", err)
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	return utils.SuccessResponse(c, dto.ArticleToResponse(article))
+}
+
 func (h *ArticleHandler) GetVersions(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

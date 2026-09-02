@@ -21,6 +21,7 @@ type ArticleService interface {
 	UploadSelectedImages(ctx context.Context, id uuid.UUID, images []map[string]any) (any, error)
 	GetImages(ctx context.Context, id uuid.UUID) ([]models.ArticleImage, error)
 	DeleteImage(ctx context.Context, articleID uuid.UUID, imageID uuid.UUID) error
+	UpdateContent(ctx context.Context, id uuid.UUID, req *dto.UpdateContentRequest) (*models.Article, error)
 	DeleteArticleFull(ctx context.Context, id uuid.UUID) error
 	GetVersions(ctx context.Context, id uuid.UUID) ([]models.ArticleVersion, error)
 }
