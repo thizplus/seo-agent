@@ -19,6 +19,7 @@ func Setup(app *fiber.App, c *di.Container) {
 	articleHandler := handlers.NewArticleHandler(c.ArticleService)
 	pageHandler := handlers.NewPageHandler(c.SitePageRepo, c.KeywordRepo, c.SiteRepo, c.PageAnalysisRepo, c.SerpHistoryRepo, c.AIEngine)
 	memberHandler := handlers.NewMemberHandler(c.SiteMemberRepo, c.SiteRepo, c.UserRepo)
+	focusQueueHandler := handlers.NewFocusQueueHandler(c.FocusQueueRepo, c.SiteRepo)
 
 	api := app.Group("/api/v1")
 
@@ -61,6 +62,15 @@ func Setup(app *fiber.App, c *di.Container) {
 	sites.Get("/:id/members", memberHandler.GetMembers)
 	sites.Post("/:id/members", memberHandler.AddMember)
 	sites.Delete("/:id/members/:memberId", memberHandler.RemoveMember)
+	sites.Get("/:id/focus-queue", focusQueueHandler.GetQueue)
+	sites.Post("/:id/focus-queue", focusQueueHandler.AddItem)
+	sites.Post("/:id/focus-queue/import", focusQueueHandler.ImportItems)
+	sites.Post("/:id/focus-queue/reset", focusQueueHandler.ResetQueue)
+	sites.Get("/:id/focus-queue/status", focusQueueHandler.GetStatus)
+	sites.Put("/:id/focus-queue/:queueId", focusQueueHandler.UpdateItem)
+	sites.Delete("/:id/focus-queue/:queueId", focusQueueHandler.DeleteItem)
+	sites.Post("/:id/focus-queue/:queueId/skip", focusQueueHandler.SkipItem)
+	sites.Post("/:id/focus-queue/:queueId/retry", focusQueueHandler.RetryItem)
 
 	articles := protected.Group("/articles")
 	articles.Post("/generate", articleHandler.Generate)

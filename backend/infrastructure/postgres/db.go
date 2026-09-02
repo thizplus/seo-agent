@@ -37,6 +37,7 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 		&models.PageAnalysis{},
 		&models.KeywordSerpHistory{},
 		&models.SiteMember{},
+		&models.KeywordFocusQueue{},
 	); err != nil {
 		return nil, err
 	}

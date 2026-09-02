@@ -26,6 +26,7 @@ type Container struct {
 	PageAnalysisRepo repositories.PageAnalysisRepository
 	SerpHistoryRepo  repositories.SerpHistoryRepository
 	SiteMemberRepo   repositories.SiteMemberRepository
+	FocusQueueRepo   repositories.FocusQueueRepository
 	UserRepo         repositories.UserRepository
 	AIEngine       ports.AIEnginePort
 	GoogleOAuth    ports.GoogleOAuthPort
@@ -45,6 +46,7 @@ func NewContainer(cfg *config.Config, db *gorm.DB) *Container {
 	pageAnalysisRepo := postgres.NewPageAnalysisRepository(db)
 	serpHistoryRepo := postgres.NewSerpHistoryRepository(db)
 	siteMemberRepo := postgres.NewSiteMemberRepository(db)
+	focusQueueRepo := postgres.NewFocusQueueRepository(db)
 
 	// Services (inject ports)
 	authService := serviceimpl.NewAuthService(userRepo, siteMemberRepo, cfg.Google.ClientID, cfg.Google.ClientSecret, cfg.Google.RedirectURL)
@@ -65,6 +67,7 @@ func NewContainer(cfg *config.Config, db *gorm.DB) *Container {
 		PageAnalysisRepo: pageAnalysisRepo,
 		SerpHistoryRepo:  serpHistoryRepo,
 		SiteMemberRepo:  siteMemberRepo,
+		FocusQueueRepo:  focusQueueRepo,
 		UserRepo:         userRepo,
 		AIEngine:       aiEngine,
 		GoogleOAuth:    googleOAuth,
