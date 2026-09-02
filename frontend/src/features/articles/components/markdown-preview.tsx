@@ -9,6 +9,12 @@ interface MarkdownPreviewProps {
 }
 
 function preprocessContent(content: string): string {
+  // H2: / H3: text -> proper markdown headings
+  content = content.replace(/^H1:\s*/gm, "# ")
+  content = content.replace(/^H2:\s*/gm, "## ")
+  content = content.replace(/^H3:\s*/gm, "### ")
+  content = content.replace(/^H4:\s*/gm, "#### ")
+
   // {{youtube:VIDEO_ID}} -> iframe embed
   return content.replace(
     /\{\{youtube:([a-zA-Z0-9_-]+)\}\}/g,

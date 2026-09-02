@@ -8,6 +8,12 @@ class GutenbergFormatter:
 
     def format(self, markdown: str) -> str:
         """แปลง Markdown → Gutenberg block HTML"""
+        # แปลง "H2: text" / "H3: text" → Markdown heading syntax
+        markdown = re.sub(r'^H1:\s*', '# ', markdown, flags=re.MULTILINE)
+        markdown = re.sub(r'^H2:\s*', '## ', markdown, flags=re.MULTILINE)
+        markdown = re.sub(r'^H3:\s*', '### ', markdown, flags=re.MULTILINE)
+        markdown = re.sub(r'^H4:\s*', '#### ', markdown, flags=re.MULTILINE)
+
         # แปลง {{youtube:VIDEO_ID}} → Gutenberg embed block ก่อน split lines
         markdown = re.sub(
             r'\{\{youtube:([a-zA-Z0-9_-]+)\}\}',

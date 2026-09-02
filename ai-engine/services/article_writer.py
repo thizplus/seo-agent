@@ -84,12 +84,13 @@ class ArticleWriter:
 
 ## Requirements
 1. เขียน {target_words}+ คำ (ต้องมากกว่าคู่แข่ง)
-2. โครงสร้าง H1 → H2 → H3 ชัดเจน
-3. เน้น EEAT: Experience, Expertise, Authority, Trust
-4. มี FAQ section (3-5 คำถาม)
-5. มี meta description (150-160 ตัวอักษร)
-6. keyword หลักอยู่ใน H1, H2 แรก, ย่อหน้าแรก
-7. เขียนเป็น Markdown format
+2. โครงสร้าง heading ชัดเจน ใช้ Markdown syntax: # สำหรับ H1, ## สำหรับ H2, ### สำหรับ H3
+3. ห้ามเขียน "H2:" หรือ "H3:" เป็น text — ต้องใช้ ## หรือ ### เท่านั้น
+4. เน้น EEAT: Experience, Expertise, Authority, Trust
+5. มี FAQ section (3-5 คำถาม)
+6. มี meta description (150-160 ตัวอักษร)
+7. keyword หลักอยู่ใน H1, H2 แรก, ย่อหน้าแรก
+8. เขียนเป็น Markdown format
 
 ## Output Format (JSON)
 ตอบเป็น JSON เท่านั้น:
