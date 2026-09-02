@@ -13,7 +13,9 @@ type GenerateArticleRequest struct {
 	KeywordID         string   `json:"keywordId" validate:"required,uuid"`
 	SecondaryKeywords []string `json:"secondaryKeywords,omitempty"`
 	PillarURL         string   `json:"pillarUrl,omitempty"`
-	CustomPrompt      string   `json:"customPrompt,omitempty"`
+	CustomTitle       string   `json:"customTitle,omitempty"`
+	ContentGuide      string   `json:"contentGuide,omitempty"`
+	WritingTone       string   `json:"writingTone,omitempty"`
 }
 
 type PublishArticleRequest struct {

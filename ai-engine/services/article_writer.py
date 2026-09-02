@@ -23,7 +23,9 @@ class ArticleWriter:
         industry: str = "",
         secondary_keywords: list[str] = None,
         pillar_url: str = "",
-        custom_prompt: str = "",
+        custom_title: str = "",
+        content_guide: str = "",
+        writing_tone: str = "",
     ) -> dict:
         serp_data = await self.serp.analyze(keyword)
         skill_context = self.skill_router.get_context("article_writing")
@@ -68,9 +70,17 @@ class ArticleWriter:
 {secondary_section}
 {pillar_section}
 {f"""
-## คำสั่งพิเศษ (สำคัญมาก — ต้องปฏิบัติตาม)
-{custom_prompt}
-""" if custom_prompt else ""}
+## หัวข้อบทความที่กำหนด (ใช้หัวข้อนี้เป็น H1)
+{custom_title}
+""" if custom_title else ""}
+{f"""
+## แนวทางเนื้อหา (สำคัญมาก — ต้องปฏิบัติตาม)
+{content_guide}
+""" if content_guide else ""}
+{f"""
+## อารมณ์/โทนการเขียน
+เขียนด้วยโทน: {writing_tone}
+""" if writing_tone else ""}
 
 ## Requirements
 1. เขียน {target_words}+ คำ (ต้องมากกว่าคู่แข่ง)

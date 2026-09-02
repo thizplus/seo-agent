@@ -74,7 +74,9 @@ export interface FocusQueueItem {
   pillarUrl: string
   primaryKeyword: string
   secondaryKeywords: string
-  customPrompt: string
+  customTitle: string
+  contentGuide: string
+  writingTone: string
   status: "pending" | "completed" | "failed" | "skipped"
   articleId?: string
   errorMessage?: string

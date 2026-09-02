@@ -183,7 +183,7 @@ function invalidateFocusQueue(queryClient: ReturnType<typeof useQueryClient>, si
 export function useAddFocusQueueItem(siteId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }) =>
+    mutationFn: (data: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string; customTitle?: string; contentGuide?: string; writingTone?: string }) =>
       siteService.addFocusQueueItem(siteId, data),
     onSuccess: () => invalidateFocusQueue(queryClient, siteId),
   })
@@ -192,7 +192,7 @@ export function useAddFocusQueueItem(siteId: string) {
 export function useImportFocusQueue(siteId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (keywords: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string }[]) =>
+    mutationFn: (keywords: { priority: number; pillarUrl: string; primaryKeyword: string; secondaryKeywords: string; customTitle?: string; contentGuide?: string; writingTone?: string }[]) =>
       siteService.importFocusQueue(siteId, keywords),
     onSuccess: () => invalidateFocusQueue(queryClient, siteId),
   })

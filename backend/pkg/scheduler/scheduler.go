@@ -278,7 +278,9 @@ func (s *Scheduler) generateFromFocusQueue(ctx context.Context, site models.Site
 		KeywordID:         matchedKWID,
 		SecondaryKeywords: secondaryKWs,
 		PillarURL:         item.PillarURL,
-		CustomPrompt:      item.CustomPrompt,
+		CustomTitle:       item.CustomTitle,
+		ContentGuide:      item.ContentGuide,
+		WritingTone:       item.WritingTone,
 	})
 
 	if err != nil {

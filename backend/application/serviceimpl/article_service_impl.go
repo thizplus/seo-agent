@@ -74,8 +74,14 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 	if req.PillarURL != "" {
 		aiReq["pillar_url"] = req.PillarURL
 	}
-	if req.CustomPrompt != "" {
-		aiReq["custom_prompt"] = req.CustomPrompt
+	if req.CustomTitle != "" {
+		aiReq["custom_title"] = req.CustomTitle
+	}
+	if req.ContentGuide != "" {
+		aiReq["content_guide"] = req.ContentGuide
+	}
+	if req.WritingTone != "" {
+		aiReq["writing_tone"] = req.WritingTone
 	}
 	aiResp, err := s.aiEngine.GenerateArticle(ctx, aiReq)
 	if err != nil {

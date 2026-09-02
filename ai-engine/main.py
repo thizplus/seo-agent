@@ -63,7 +63,9 @@ async def generate_article(req: GenerateArticleRequest):
         brand_voice=req.brand_voice, industry=req.industry,
         secondary_keywords=req.secondary_keywords or None,
         pillar_url=req.pillar_url,
-        custom_prompt=req.custom_prompt,
+        custom_title=req.custom_title,
+        content_guide=req.content_guide,
+        writing_tone=req.writing_tone,
     )
     return GenerateArticleResponse(**result)
 
