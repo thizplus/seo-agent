@@ -16,6 +16,7 @@ import {
   ArticlesCard,
   MembersCard,
   FocusQueueCard,
+  AiSettingsCard,
 } from "@/features/sites"
 import { LayoutDashboardIcon, FileTextIcon, KeyIcon, WrenchIcon } from "lucide-react"
 
@@ -77,6 +78,7 @@ export default function SiteDetailPage({
 
           <TabsContent value={0} className="flex flex-col gap-6">
             <SiteInfoCard site={site} />
+            <AiSettingsCard site={site} />
             <PipelineCard siteId={id} />
             <FocusQueueCard siteId={id} />
           </TabsContent>

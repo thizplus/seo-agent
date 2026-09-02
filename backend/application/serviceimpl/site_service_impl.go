@@ -103,6 +103,12 @@ func (s *siteServiceImpl) Update(ctx context.Context, id uuid.UUID, req *dto.Upd
 	if req.WPAppPassword != nil {
 		site.WPAppPassword = *req.WPAppPassword
 	}
+	if req.WritingTone != nil {
+		site.WritingTone = *req.WritingTone
+	}
+	if req.ContentGuide != nil {
+		site.ContentGuide = *req.ContentGuide
+	}
 	if err := s.siteRepo.Update(ctx, site); err != nil {
 		return nil, err
 	}

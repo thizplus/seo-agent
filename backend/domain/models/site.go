@@ -30,6 +30,10 @@ type Site struct {
 	WPUsername    string `gorm:"size:255"`
 	WPAppPassword string `gorm:"size:255"`
 
+	// AI Writing Settings (per site — ใช้ทุกบทความ)
+	WritingTone  string `gorm:"size:255"`
+	ContentGuide string `gorm:"type:text"`
+
 	// Auto-extracted seed keywords จาก site analysis
 	SuggestedSeeds datatypes.JSON `gorm:"type:jsonb"`
 

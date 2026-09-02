@@ -22,7 +22,7 @@ interface FocusQueueCardProps {
   siteId: string
 }
 
-const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "", contentGuide: "", writingTone: "" }
+const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "" }
 
 export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const { data: queue, isLoading } = useFocusQueue(siteId)
@@ -75,9 +75,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
       pillarUrl: r.pillarUrl.trim(),
       primaryKeyword: r.primaryKeyword.trim(),
       secondaryKeywords: r.secondaryKeywords.trim(),
-      customTitle: r.customTitle.trim(),
-      contentGuide: r.contentGuide.trim(),
-      writingTone: r.writingTone.trim(),
+      customTitle: r.customTitle?.trim() || "",
     }))
 
     importQueue.mutate(keywords, {
@@ -183,14 +181,6 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
               <span className="text-sm">หัวข้อ</span>
               <Input placeholder="กำหนดหัวข้อบทความ (ไม่บังคับ — AI จะตั้งให้)" value={addForm.customTitle} onChange={(e) => setAddForm({ ...addForm, customTitle: e.target.value })} />
             </div>
-            <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
-              <span className="text-sm">แนวทาง</span>
-              <Input placeholder="เช่น เปรียบเทียบวัสดุ, มี table ราคา, มีรีวิว (ไม่บังคับ)" value={addForm.contentGuide} onChange={(e) => setAddForm({ ...addForm, contentGuide: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
-              <span className="text-sm">อารมณ์</span>
-              <Input placeholder="เช่น กันเอง สนุก / ทางการ มืออาชีพ / เน้นขาย (ไม่บังคับ)" value={addForm.writingTone} onChange={(e) => setAddForm({ ...addForm, writingTone: e.target.value })} />
-            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>ยกเลิก</Button>
               <Button size="sm" onClick={handleAdd} disabled={addItem.isPending}>
@@ -209,26 +199,14 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
 
             {/* Rows */}
             {importRows.map((row, i) => (
-              <div key={i} className="rounded-lg border p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Keyword #{i + 1}</span>
-                  <Button variant="ghost" size="icon" className="size-7" onClick={() => removeImportRow(i)}>
-                    <Trash2Icon className="size-3.5 text-muted-foreground" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Keyword หลัก *" value={row.primaryKeyword} onChange={(e) => updateImportRow(i, "primaryKeyword", e.target.value)} />
-                  <Input placeholder="Keywords รอง (kw1, kw2, ...)" value={row.secondaryKeywords} onChange={(e) => updateImportRow(i, "secondaryKeywords", e.target.value)} />
-                </div>
-                <div className="grid grid-cols-[80px_1fr_80px] gap-2">
-                  <Input type="number" placeholder="#" value={row.priority} onChange={(e) => updateImportRow(i, "priority", parseInt(e.target.value) || i + 1)} className="text-center" />
-                  <Input placeholder="URL หลัก เช่น /fabricbackdrop/" value={row.pillarUrl} onChange={(e) => updateImportRow(i, "pillarUrl", e.target.value)} />
-                  <Input placeholder="อารมณ์" value={row.writingTone} onChange={(e) => updateImportRow(i, "writingTone", e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="หัวข้อบทความ (ไม่บังคับ)" value={row.customTitle} onChange={(e) => updateImportRow(i, "customTitle", e.target.value)} />
-                  <Input placeholder="แนวทางเนื้อหา (ไม่บังคับ)" value={row.contentGuide} onChange={(e) => updateImportRow(i, "contentGuide", e.target.value)} />
-                </div>
+              <div key={i} className="grid grid-cols-[40px_1fr_1fr_1fr_40px] gap-2 items-center">
+                <Input type="number" value={row.priority} onChange={(e) => updateImportRow(i, "priority", parseInt(e.target.value) || i + 1)} className="text-center text-sm" />
+                <Input placeholder="Keyword หลัก *" value={row.primaryKeyword} onChange={(e) => updateImportRow(i, "primaryKeyword", e.target.value)} />
+                <Input placeholder="Keywords รอง (kw1, kw2, ...)" value={row.secondaryKeywords} onChange={(e) => updateImportRow(i, "secondaryKeywords", e.target.value)} />
+                <Input placeholder="URL หลัก /path/" value={row.pillarUrl} onChange={(e) => updateImportRow(i, "pillarUrl", e.target.value)} />
+                <Button variant="ghost" size="icon" className="size-8" onClick={() => removeImportRow(i)}>
+                  <Trash2Icon className="size-3.5 text-muted-foreground" />
+                </Button>
               </div>
             ))}
 
@@ -301,12 +279,6 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                 )}
                 {item.customTitle && (
                   <p className="text-xs text-blue-600 mt-0.5 ml-6">หัวข้อ: {item.customTitle}</p>
-                )}
-                {item.contentGuide && (
-                  <p className="text-xs text-amber-600 mt-0.5 ml-6">แนวทาง: {item.contentGuide}</p>
-                )}
-                {item.writingTone && (
-                  <p className="text-xs text-purple-600 mt-0.5 ml-6">อารมณ์: {item.writingTone}</p>
                 )}
                 {item.errorMessage && (
                   <p className="text-sm text-red-500 mt-1 ml-6">{item.errorMessage}</p>

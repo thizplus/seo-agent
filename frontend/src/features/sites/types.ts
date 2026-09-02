@@ -10,6 +10,8 @@ export interface Site {
   llmProvider: string
   hasLlmKey: boolean
   hasWordPress: boolean
+  writingTone: string
+  contentGuide: string
   hasGsc: boolean
   gscSiteUrl: string
   createdAt: string
@@ -38,6 +40,8 @@ export interface UpdateSiteRequest {
   wpUrl?: string
   wpUsername?: string
   wpAppPassword?: string
+  writingTone?: string
+  contentGuide?: string
 }
 
 export interface TopicClusterResult {
@@ -75,8 +79,6 @@ export interface FocusQueueItem {
   primaryKeyword: string
   secondaryKeywords: string
   customTitle: string
-  contentGuide: string
-  writingTone: string
   status: "pending" | "completed" | "failed" | "skipped"
   articleId?: string
   errorMessage?: string

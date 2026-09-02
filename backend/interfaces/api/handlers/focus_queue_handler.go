@@ -45,8 +45,6 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PrimaryKeyword    string `json:"primaryKeyword"`
 		SecondaryKeywords string `json:"secondaryKeywords"`
 		CustomTitle       string `json:"customTitle"`
-		ContentGuide      string `json:"contentGuide"`
-		WritingTone       string `json:"writingTone"`
 	}
 	if err := c.BodyParser(&body); err != nil || body.PrimaryKeyword == "" {
 		return utils.BadRequestResponse(c, "กรุณาระบุ keyword หลัก")
@@ -59,8 +57,6 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PrimaryKeyword:    body.PrimaryKeyword,
 		SecondaryKeywords: body.SecondaryKeywords,
 		CustomTitle:       body.CustomTitle,
-		ContentGuide:      body.ContentGuide,
-		WritingTone:       body.WritingTone,
 		Status:            "pending",
 	}
 	if err := h.queueRepo.Create(c.UserContext(), item); err != nil {
@@ -87,8 +83,6 @@ func (h *FocusQueueHandler) ImportItems(c *fiber.Ctx) error {
 			PrimaryKeyword    string `json:"primaryKeyword"`
 			SecondaryKeywords string `json:"secondaryKeywords"`
 			CustomTitle       string `json:"customTitle"`
-			ContentGuide      string `json:"contentGuide"`
-			WritingTone       string `json:"writingTone"`
 		} `json:"keywords"`
 	}
 	if err := c.BodyParser(&body); err != nil || len(body.Keywords) == 0 {
@@ -112,8 +106,6 @@ func (h *FocusQueueHandler) ImportItems(c *fiber.Ctx) error {
 			PrimaryKeyword:    kw.PrimaryKeyword,
 			SecondaryKeywords: kw.SecondaryKeywords,
 			CustomTitle:       kw.CustomTitle,
-			ContentGuide:      kw.ContentGuide,
-			WritingTone:       kw.WritingTone,
 			Status:            "pending",
 		})
 	}

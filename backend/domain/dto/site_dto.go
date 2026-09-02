@@ -29,6 +29,8 @@ type UpdateSiteRequest struct {
 	WPUrl         *string `json:"wpUrl,omitempty"`
 	WPUsername    *string `json:"wpUsername,omitempty"`
 	WPAppPassword *string `json:"wpAppPassword,omitempty"`
+	WritingTone   *string `json:"writingTone,omitempty"`
+	ContentGuide  *string `json:"contentGuide,omitempty"`
 }
 
 // --- Response ---
@@ -48,6 +50,8 @@ type SiteResponse struct {
 	HasLLMKey      bool      `json:"hasLlmKey"`
 	HasWordPress   bool      `json:"hasWordPress"`
 	SuggestedSeeds []string  `json:"suggestedSeeds"`
+	WritingTone    string    `json:"writingTone"`
+	ContentGuide   string    `json:"contentGuide"`
 	HasGSC         bool      `json:"hasGsc"`
 	GSCSiteURL     string    `json:"gscSiteUrl"`
 	CreatedAt      time.Time `json:"createdAt"`
@@ -69,6 +73,8 @@ func SiteToResponse(s *models.Site) *SiteResponse {
 		AnalysisStatus: s.AnalysisStatus,
 		AnalysisData:   jsonOrNil(s.AnalysisData),
 		LLMProvider:    s.LLMProvider,
+		WritingTone:    s.WritingTone,
+		ContentGuide:   s.ContentGuide,
 		SuggestedSeeds: parseSeedsJSON(s.SuggestedSeeds),
 		HasLLMKey:      s.LLMApiKey != "",
 		HasWordPress:   s.WPUrl != "",
