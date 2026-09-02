@@ -10,19 +10,19 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   TargetIcon, PlusIcon, Loader2Icon, Trash2Icon,
   SkipForwardIcon, RotateCcwIcon, CheckCircleIcon,
-  XCircleIcon, ClockIcon, UploadIcon, ExternalLinkIcon,
+  XCircleIcon, ClockIcon, ExternalLinkIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { NAV_ROUTES } from "@/constants/nav"
 
 interface FocusQueueCardProps {
   siteId: string
 }
+
+const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customPrompt: "" }
 
 export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const { data: queue, isLoading } = useFocusQueue(siteId)
@@ -36,41 +36,51 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
 
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
-  const [addForm, setAddForm] = useState({ priority: 1, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customPrompt: "" })
-  const [csvText, setCsvText] = useState("")
+  const [addForm, setAddForm] = useState({ ...emptyRow, priority: 1 })
+
+  // Import: หลาย rows กรอกทีเดียว
+  const [importRows, setImportRows] = useState([{ ...emptyRow, priority: 1 }, { ...emptyRow, priority: 2 }, { ...emptyRow, priority: 3 }])
 
   const handleAdd = () => {
     if (!addForm.primaryKeyword.trim()) return
     addItem.mutate(addForm, {
       onSuccess: () => {
-        setAddForm({ priority: (queue?.length || 0) + 2, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customPrompt: "" })
+        setAddForm({ ...emptyRow, priority: (queue?.length || 0) + 2 })
         setShowAdd(false)
       },
       onError: (err) => alert(err.message),
     })
   }
 
-  const handleImport = () => {
-    if (!csvText.trim()) return
-    const lines = csvText.trim().split("\n").filter(Boolean)
-    const keywords = lines.map((line, i) => {
-      const parts = line.split("\t")
-      return {
-        priority: parseInt(parts[0]) || i + 1,
-        pillarUrl: parts[1]?.trim() || "",
-        primaryKeyword: parts[2]?.trim() || parts[0]?.trim() || "",
-        secondaryKeywords: parts[3]?.trim() || "",
-      }
-    }).filter(k => k.primaryKeyword)
+  const updateImportRow = (index: number, field: string, value: string | number) => {
+    setImportRows(rows => rows.map((r, i) => i === index ? { ...r, [field]: value } : r))
+  }
 
-    if (keywords.length === 0) {
-      alert("ไม่พบ keyword ที่ valid")
+  const addImportRow = () => {
+    setImportRows(rows => [...rows, { ...emptyRow, priority: rows.length + 1 }])
+  }
+
+  const removeImportRow = (index: number) => {
+    setImportRows(rows => rows.filter((_, i) => i !== index))
+  }
+
+  const handleImport = () => {
+    const valid = importRows.filter(r => r.primaryKeyword.trim())
+    if (valid.length === 0) {
+      alert("กรุณากรอก keyword อย่างน้อย 1 ตัว")
       return
     }
+    const keywords = valid.map((r, i) => ({
+      priority: r.priority || i + 1,
+      pillarUrl: r.pillarUrl.trim(),
+      primaryKeyword: r.primaryKeyword.trim(),
+      secondaryKeywords: r.secondaryKeywords.trim(),
+      customPrompt: r.customPrompt.trim(),
+    }))
 
     importQueue.mutate(keywords, {
       onSuccess: (data) => {
-        setCsvText("")
+        setImportRows([{ ...emptyRow, priority: 1 }, { ...emptyRow, priority: 2 }, { ...emptyRow, priority: 3 }])
         setShowImport(false)
         alert(`Import สำเร็จ ${data.imported} keywords`)
       },
@@ -115,11 +125,11 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowImport(!showImport)}>
-              <UploadIcon className="mr-1 size-4" />
-              Import
+            <Button variant="outline" size="sm" onClick={() => { setShowImport(!showImport); setShowAdd(false) }}>
+              <PlusIcon className="mr-1 size-4" />
+              Import หลายตัว
             </Button>
-            <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
+            <Button size="sm" onClick={() => { setShowAdd(!showAdd); setShowImport(false) }}>
               <PlusIcon className="mr-1 size-4" />
               เพิ่ม
             </Button>
@@ -137,10 +147,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
               <span className="text-muted-foreground">เหลือ ~{status.estimatedDaysLeft} วัน</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
-              <div
-                className="bg-green-600 h-2 rounded-full transition-all"
-                style={{ width: status.progress }}
-              />
+              <div className="bg-green-600 h-2 rounded-full transition-all" style={{ width: status.progress }} />
             </div>
             {status.nextKeyword && (
               <p className="text-sm text-muted-foreground mt-2">
@@ -150,7 +157,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
           </div>
         )}
 
-        {/* Add form */}
+        {/* Add single item form */}
         {showAdd && (
           <div className="rounded-lg border p-4 flex flex-col gap-3">
             <p className="font-medium">เพิ่ม Keyword เข้าคิว</p>
@@ -172,7 +179,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
             </div>
             <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
               <span className="text-sm">Prompt</span>
-              <Input placeholder="เช่น เขียนแบบ buying guide, เน้นเปรียบเทียบราคา (ไม่บังคับ)" value={addForm.customPrompt} onChange={(e) => setAddForm({ ...addForm, customPrompt: e.target.value })} />
+              <Input placeholder="เช่น เขียนแบบ buying guide (ไม่บังคับ)" value={addForm.customPrompt} onChange={(e) => setAddForm({ ...addForm, customPrompt: e.target.value })} />
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>ยกเลิก</Button>
@@ -184,27 +191,50 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
           </div>
         )}
 
-        {/* Import CSV */}
+        {/* Import multiple items form */}
         {showImport && (
           <div className="rounded-lg border p-4 flex flex-col gap-3">
-            <p className="font-medium">Import จาก Google Sheet</p>
-            <p className="text-sm text-muted-foreground">Copy จาก Sheet แล้ววางที่นี่ (Tab-separated: ลำดับ → URL → Keyword → Keywords รอง)</p>
-            <Textarea
-              placeholder={"1\t/fabricbackdrop/\tแบคดรอปผ้า\tBackdrop ผ้า, แบคดรอปออกบูธ\n2\t/table-cover/\tผ้าคลุมโต๊ะ\tผ้าปูโต๊ะ, ผ้าคลุมโต๊ะออกบูธ"}
-              rows={5}
-              value={csvText}
-              onChange={(e) => setCsvText(e.target.value)}
-            />
-            {csvText.trim() && (
-              <p className="text-sm text-muted-foreground">
-                พบ {csvText.trim().split("\n").filter(Boolean).length} keywords พร้อม import
-              </p>
-            )}
+            <p className="font-medium">Import หลาย Keywords พร้อมกัน</p>
+            <p className="text-sm text-muted-foreground">กรอกทีละช่อง ไม่ต้องกังวลเรื่อง format</p>
+
+            {/* Header */}
+            <div className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>#</span>
+              <span>Keyword หลัก *</span>
+              <span>Keywords รอง</span>
+              <span>URL หลัก</span>
+              <span>Prompt</span>
+              <span></span>
+            </div>
+
+            {/* Rows */}
+            {importRows.map((row, i) => (
+              <div key={i} className="grid grid-cols-[50px_1fr_1fr_1fr_1fr_40px] gap-2 items-center">
+                <Input type="number" value={row.priority} onChange={(e) => updateImportRow(i, "priority", parseInt(e.target.value) || i + 1)} className="text-center" />
+                <Input placeholder="keyword หลัก" value={row.primaryKeyword} onChange={(e) => updateImportRow(i, "primaryKeyword", e.target.value)} />
+                <Input placeholder="kw1, kw2, ..." value={row.secondaryKeywords} onChange={(e) => updateImportRow(i, "secondaryKeywords", e.target.value)} />
+                <Input placeholder="/path/" value={row.pillarUrl} onChange={(e) => updateImportRow(i, "pillarUrl", e.target.value)} />
+                <Input placeholder="prompt (ไม่บังคับ)" value={row.customPrompt} onChange={(e) => updateImportRow(i, "customPrompt", e.target.value)} />
+                <Button variant="ghost" size="icon" className="size-8" onClick={() => removeImportRow(i)}>
+                  <Trash2Icon className="size-3.5 text-muted-foreground" />
+                </Button>
+              </div>
+            ))}
+
+            <Button variant="outline" size="sm" onClick={addImportRow} className="self-start">
+              <PlusIcon className="mr-1 size-4" />
+              เพิ่มแถว
+            </Button>
+
+            <p className="text-sm text-muted-foreground">
+              {importRows.filter(r => r.primaryKeyword.trim()).length} keywords พร้อม import
+            </p>
+
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => { setShowImport(false); setCsvText("") }}>ยกเลิก</Button>
-              <Button size="sm" onClick={handleImport} disabled={importQueue.isPending || !csvText.trim()}>
+              <Button variant="outline" size="sm" onClick={() => setShowImport(false)}>ยกเลิก</Button>
+              <Button size="sm" onClick={handleImport} disabled={importQueue.isPending}>
                 {importQueue.isPending && <Loader2Icon className="mr-1 size-4 animate-spin" />}
-                Import
+                Import {importRows.filter(r => r.primaryKeyword.trim()).length} keywords
               </Button>
             </div>
           </div>
@@ -216,7 +246,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
         ) : !queue?.length ? (
           <div className="text-center py-6 text-muted-foreground">
             <TargetIcon className="mx-auto size-8 mb-2 opacity-50" />
-            <p>ยังไม่มีคิว กด "เพิ่ม" หรือ "Import" เพื่อเริ่ม</p>
+            <p>ยังไม่มีคิว กด "เพิ่ม" หรือ "Import หลายตัว" เพื่อเริ่ม</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -253,9 +283,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                   </div>
                 </div>
                 {item.secondaryKeywords && (
-                  <p className="text-sm text-muted-foreground mt-1 ml-6 truncate">
-                    {item.secondaryKeywords}
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1 ml-6 truncate">{item.secondaryKeywords}</p>
                 )}
                 {item.pillarUrl && (
                   <p className="text-xs text-muted-foreground mt-0.5 ml-6">{item.pillarUrl}</p>
