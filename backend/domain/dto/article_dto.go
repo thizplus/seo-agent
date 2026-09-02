@@ -9,8 +9,10 @@ import (
 // --- Request ---
 
 type GenerateArticleRequest struct {
-	SiteID    string `json:"siteId" validate:"required,uuid"`
-	KeywordID string `json:"keywordId" validate:"required,uuid"`
+	SiteID            string   `json:"siteId" validate:"required,uuid"`
+	KeywordID         string   `json:"keywordId" validate:"required,uuid"`
+	SecondaryKeywords []string `json:"secondaryKeywords,omitempty"`
+	PillarURL         string   `json:"pillarUrl,omitempty"`
 }
 
 type PublishArticleRequest struct {

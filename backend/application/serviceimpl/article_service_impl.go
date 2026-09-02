@@ -64,10 +64,17 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 		return nil, err
 	}
 
-	aiResp, err := s.aiEngine.GenerateArticle(ctx, map[string]any{
+	aiReq := map[string]any{
 		"keyword": keyword.Keyword, "site_url": site.URL, "site_name": site.Name,
 		"brand_voice": site.BrandVoice, "industry": site.Industry, "llm_provider": site.LLMProvider, "llm_api_key": site.LLMApiKey,
-	})
+	}
+	if len(req.SecondaryKeywords) > 0 {
+		aiReq["secondary_keywords"] = req.SecondaryKeywords
+	}
+	if req.PillarURL != "" {
+		aiReq["pillar_url"] = req.PillarURL
+	}
+	aiResp, err := s.aiEngine.GenerateArticle(ctx, aiReq)
 	if err != nil {
 		s.articleRepo.Delete(ctx, article.ID)
 		return nil, fmt.Errorf("AI engine error: %w", err)

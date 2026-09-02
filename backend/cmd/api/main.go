@@ -65,6 +65,7 @@ func main() {
 		container.SiteService, container.KeywordService, container.ArticleService,
 		container.SiteRepo, container.ArticleRepo,
 		container.SitePageRepo, container.KeywordRepo, container.PageAnalysisRepo, container.SerpHistoryRepo,
+		container.FocusQueueRepo,
 		container.AIEngine,
 	)
 	sched.Start()

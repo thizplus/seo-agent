@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -26,6 +27,7 @@ type Scheduler struct {
 	keywordRepo    repositories.KeywordRepository
 	analysisRepo   repositories.PageAnalysisRepository
 	serpRepo       repositories.SerpHistoryRepository
+	focusQueueRepo repositories.FocusQueueRepository
 	aiEngine       ports.AIEnginePort
 }
 
@@ -39,6 +41,7 @@ func New(
 	keywordRepo repositories.KeywordRepository,
 	analysisRepo repositories.PageAnalysisRepository,
 	serpRepo repositories.SerpHistoryRepository,
+	focusQueueRepo repositories.FocusQueueRepository,
 	aiEngine ports.AIEnginePort,
 ) *Scheduler {
 	return &Scheduler{
@@ -52,6 +55,7 @@ func New(
 		keywordRepo:    keywordRepo,
 		analysisRepo:   analysisRepo,
 		serpRepo:       serpRepo,
+		focusQueueRepo: focusQueueRepo,
 		aiEngine:       aiEngine,
 	}
 }
@@ -189,7 +193,7 @@ func (s *Scheduler) runPageAnalysis() {
 	}
 }
 
-// Step 3: Content Generation — สร้างบทความสำหรับ keywords ที่ยังไม่มีบทความ
+// Step 3: Content Generation — เช็ค Focus Queue ก่อน → fallback เป็น keyword ทั่วไป
 func (s *Scheduler) runContentGeneration() {
 	ctx := context.Background()
 
@@ -204,52 +208,141 @@ func (s *Scheduler) runContentGeneration() {
 			continue
 		}
 
-		// ดึง keywords ทั้งหมด
-		allKWs, _ := s.keywordService.GetBySiteID(ctx, site.ID)
-		if len(allKWs) == 0 {
+		generated := false
+
+		// 1. เช็ค Focus Queue ก่อน
+		focusItem, err := s.focusQueueRepo.GetNextPending(ctx, site.ID)
+		if err == nil && focusItem != nil {
+			generated = s.generateFromFocusQueue(ctx, site, focusItem)
+		}
+
+		// 2. ถ้าไม่มี Focus Queue → fallback ระบบเดิม
+		if !generated && focusItem == nil {
+			generated = s.generateFromKeywords(ctx, site)
+		}
+
+		if generated {
+			slog.Info("ContentGen: Site complete", "site", site.Name)
+			time.Sleep(120 * time.Second)
+		}
+	}
+}
+
+// generateFromFocusQueue สร้างบทความจาก Focus Queue item
+func (s *Scheduler) generateFromFocusQueue(ctx context.Context, site models.Site, item *models.KeywordFocusQueue) bool {
+	now := time.Now()
+
+	// เช็ค keyword ใน keywords table → หา keyword ID ที่ตรง
+	allKWs, _ := s.keywordRepo.GetBySiteID(ctx, site.ID)
+	var matchedKWID string
+	for _, kw := range allKWs {
+		if kw.Keyword == item.PrimaryKeyword {
+			matchedKWID = kw.ID.String()
+			break
+		}
+	}
+
+	// ถ้าไม่มี keyword ใน DB → สร้าง keyword ใหม่
+	if matchedKWID == "" {
+		newKW := &models.Keyword{
+			SiteID:  site.ID,
+			Keyword: item.PrimaryKeyword,
+			Intent:  "commercial",
+			Score:   8,
+			Source:  "focus_queue",
+		}
+		if err := s.keywordRepo.Create(ctx, newKW); err != nil {
+			slog.Warn("ContentGen: Failed to create keyword", "keyword", item.PrimaryKeyword, "error", err)
+			return false
+		}
+		matchedKWID = newKW.ID.String()
+	}
+
+	// แยก secondary keywords
+	var secondaryKWs []string
+	if item.SecondaryKeywords != "" {
+		for _, kw := range strings.Split(item.SecondaryKeywords, ",") {
+			trimmed := strings.TrimSpace(kw)
+			if trimmed != "" {
+				secondaryKWs = append(secondaryKWs, trimmed)
+			}
+		}
+	}
+
+	slog.Info("ContentGen: Generating from Focus Queue",
+		"keyword", item.PrimaryKeyword, "site", site.Name,
+		"priority", item.Priority, "secondary", len(secondaryKWs))
+
+	article, err := s.articleService.Generate(ctx, &dto.GenerateArticleRequest{
+		SiteID:            site.ID.String(),
+		KeywordID:         matchedKWID,
+		SecondaryKeywords: secondaryKWs,
+		PillarURL:         item.PillarURL,
+	})
+
+	if err != nil {
+		// Mark failed + increment retry
+		item.Status = "failed"
+		item.ErrorMessage = err.Error()
+		item.RetryCount++
+		if item.RetryCount >= 3 {
+			item.Status = "skipped"
+			slog.Warn("ContentGen: Focus Queue item skipped after 3 retries",
+				"keyword", item.PrimaryKeyword, "error", err)
+		} else {
+			slog.Warn("ContentGen: Focus Queue item failed, will retry",
+				"keyword", item.PrimaryKeyword, "retry", item.RetryCount, "error", err)
+		}
+		s.focusQueueRepo.Update(ctx, item)
+		return false
+	}
+
+	// Mark completed
+	item.Status = "completed"
+	item.ArticleID = &article.ID
+	item.CompletedAt = &now
+	item.ErrorMessage = ""
+	s.focusQueueRepo.Update(ctx, item)
+
+	slog.Info("ContentGen: Focus Queue done",
+		"keyword", item.PrimaryKeyword, "title", article.Title, "words", article.WordCount)
+	return true
+}
+
+// generateFromKeywords สร้างบทความจาก keywords table (ระบบเดิม)
+func (s *Scheduler) generateFromKeywords(ctx context.Context, site models.Site) bool {
+	allKWs, _ := s.keywordService.GetBySiteID(ctx, site.ID)
+	if len(allKWs) == 0 {
+		return false
+	}
+
+	allArticles, _ := s.articleService.GetBySiteID(ctx, site.ID)
+	usedKWIDs := map[string]bool{}
+	for _, a := range allArticles {
+		if a.KeywordID != nil {
+			usedKWIDs[a.KeywordID.String()] = true
+		}
+	}
+
+	for _, kw := range allKWs {
+		if usedKWIDs[kw.ID.String()] {
 			continue
 		}
 
-		// ดึง articles ที่มีอยู่แล้ว — เช็คทั้ง keyword_id และ title (ป้องกันซ้ำ)
-		allArticles, _ := s.articleService.GetBySiteID(ctx, site.ID)
-		usedKWIDs := map[string]bool{}
-		for _, a := range allArticles {
-			if a.KeywordID != nil {
-				usedKWIDs[a.KeywordID.String()] = true
-			}
+		slog.Info("ContentGen: Generating from keywords", "keyword", kw.Keyword, "site", site.Name)
+		article, err := s.articleService.Generate(ctx, &dto.GenerateArticleRequest{
+			SiteID: site.ID.String(), KeywordID: kw.ID.String(),
+		})
+		if err != nil {
+			slog.Warn("ContentGen: Failed", "keyword", kw.Keyword, "error", err)
+			return false
 		}
 
-		// Generate สำหรับ keywords ที่ยังไม่มีบทความ (max 1/site/day)
-		generated := 0
-		for _, kw := range allKWs {
-			if generated >= 1 {
-				break
-			}
-			if usedKWIDs[kw.ID.String()] {
-				continue // keyword นี้มีบทความแล้ว
-			}
-			if generated > 0 {
-				time.Sleep(60 * time.Second)
-			}
-
-			slog.Info("ContentGen: Generating", "keyword", kw.Keyword, "site", site.Name)
-			article, err := s.articleService.Generate(ctx, &dto.GenerateArticleRequest{
-				SiteID: site.ID.String(), KeywordID: kw.ID.String(),
-			})
-			if err != nil {
-				slog.Warn("ContentGen: Failed", "keyword", kw.Keyword, "error", err)
-				continue
-			}
-
-			slog.Info("ContentGen: Done", "title", article.Title, "words", article.WordCount)
-			generated++
-		}
-
-		if generated > 0 {
-			slog.Info("ContentGen: Site complete", "site", site.Name, "articles", generated)
-			time.Sleep(120 * time.Second) // delay ระหว่าง site ป้องกัน rate limit
-		}
+		slog.Info("ContentGen: Done", "title", article.Title, "words", article.WordCount)
+		return true
 	}
+
+	return false
 }
 
 // Step 4: Ranking Tracker — ดึง GSC metrics + auto optimize
