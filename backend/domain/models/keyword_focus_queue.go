@@ -15,6 +15,8 @@ type KeywordFocusQueue struct {
 	PrimaryKeyword    string     `gorm:"size:255;not null;uniqueIndex:idx_site_primary_kw" json:"primaryKeyword"`
 	SecondaryKeywords string     `gorm:"type:text" json:"secondaryKeywords"`
 	CustomTitle       string     `gorm:"type:text" json:"customTitle"`
+	OverrideTone      string     `gorm:"size:255" json:"overrideTone"`
+	OverrideGuide     string     `gorm:"type:text" json:"overrideGuide"`
 	Status            string     `gorm:"size:50;default:pending;index" json:"status"`
 	ArticleID         *uuid.UUID `gorm:"type:uuid" json:"articleId"`
 	ErrorMessage      string     `gorm:"type:text" json:"errorMessage"`

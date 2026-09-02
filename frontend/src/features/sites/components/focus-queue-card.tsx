@@ -22,7 +22,16 @@ interface FocusQueueCardProps {
   siteId: string
 }
 
-const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "" }
+const emptyRow = { priority: 0, pillarUrl: "", primaryKeyword: "", secondaryKeywords: "", customTitle: "", overrideTone: "", overrideGuide: "" }
+
+const TONE_OPTIONS = [
+  { value: "", label: "ใช้ค่าเริ่มต้นของ site" },
+  { value: "กันเอง สนุก ใช้ภาษาง่ายๆ", label: "กันเอง สนุก" },
+  { value: "ทางการ มืออาชีพ น่าเชื่อถือ", label: "ทางการ มืออาชีพ" },
+  { value: "เน้นขาย กระตุ้นซื้อ มี CTA ทุกหัวข้อ", label: "เน้นขาย" },
+  { value: "ให้ความรู้ อธิบายละเอียด เหมือนครูสอน", label: "ให้ความรู้" },
+  { value: "รีวิว เปรียบเทียบ ตรงไปตรงมา", label: "รีวิว เปรียบเทียบ" },
+]
 
 export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const { data: queue, isLoading } = useFocusQueue(siteId)
@@ -181,6 +190,28 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
               <span className="text-sm">หัวข้อ</span>
               <Input placeholder="กำหนดหัวข้อบทความ (ไม่บังคับ — AI จะตั้งให้)" value={addForm.customTitle} onChange={(e) => setAddForm({ ...addForm, customTitle: e.target.value })} />
             </div>
+            <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
+              <span className="text-sm">อารมณ์</span>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                value={addForm.overrideTone}
+                onChange={(e) => setAddForm({ ...addForm, overrideTone: e.target.value })}
+              >
+                {TONE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-[80px_1fr] gap-2 items-start">
+              <span className="text-sm mt-2">แนวทาง</span>
+              <textarea
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="แนวทางเฉพาะ keyword นี้ (ไม่บังคับ — ใช้ค่าเริ่มต้นของ site)"
+                rows={2}
+                value={addForm.overrideGuide}
+                onChange={(e) => setAddForm({ ...addForm, overrideGuide: e.target.value })}
+              />
+            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>ยกเลิก</Button>
               <Button size="sm" onClick={handleAdd} disabled={addItem.isPending}>
@@ -279,6 +310,12 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                 )}
                 {item.customTitle && (
                   <p className="text-xs text-blue-600 mt-0.5 ml-6">หัวข้อ: {item.customTitle}</p>
+                )}
+                {item.overrideTone && (
+                  <p className="text-xs text-purple-600 mt-0.5 ml-6">อารมณ์: {item.overrideTone}</p>
+                )}
+                {item.overrideGuide && (
+                  <p className="text-xs text-amber-600 mt-0.5 ml-6">แนวทาง: {item.overrideGuide}</p>
                 )}
                 {item.errorMessage && (
                   <p className="text-sm text-red-500 mt-1 ml-6">{item.errorMessage}</p>

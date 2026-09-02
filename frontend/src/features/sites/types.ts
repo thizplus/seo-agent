@@ -79,6 +79,8 @@ export interface FocusQueueItem {
   primaryKeyword: string
   secondaryKeywords: string
   customTitle: string
+  overrideTone: string
+  overrideGuide: string
   status: "pending" | "completed" | "failed" | "skipped"
   articleId?: string
   errorMessage?: string

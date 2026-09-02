@@ -278,9 +278,9 @@ func (s *Scheduler) generateFromFocusQueue(ctx context.Context, site models.Site
 		KeywordID:         matchedKWID,
 		SecondaryKeywords: secondaryKWs,
 		PillarURL:         item.PillarURL,
-		CustomTitle:       item.CustomTitle,
-		ContentGuide:      site.ContentGuide,
-		WritingTone:       site.WritingTone,
+		CustomTitle:  item.CustomTitle,
+		ContentGuide: firstNonEmpty(item.OverrideGuide, site.ContentGuide),
+		WritingTone:  firstNonEmpty(item.OverrideTone, site.WritingTone),
 	})
 
 	if err != nil {
@@ -346,6 +346,15 @@ func (s *Scheduler) generateFromKeywords(ctx context.Context, site models.Site) 
 	}
 
 	return false
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // Step 4: Ranking Tracker — ดึง GSC metrics + auto optimize

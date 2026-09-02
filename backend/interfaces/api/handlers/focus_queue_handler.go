@@ -45,6 +45,8 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PrimaryKeyword    string `json:"primaryKeyword"`
 		SecondaryKeywords string `json:"secondaryKeywords"`
 		CustomTitle       string `json:"customTitle"`
+		OverrideTone      string `json:"overrideTone"`
+		OverrideGuide     string `json:"overrideGuide"`
 	}
 	if err := c.BodyParser(&body); err != nil || body.PrimaryKeyword == "" {
 		return utils.BadRequestResponse(c, "กรุณาระบุ keyword หลัก")
@@ -57,6 +59,8 @@ func (h *FocusQueueHandler) AddItem(c *fiber.Ctx) error {
 		PrimaryKeyword:    body.PrimaryKeyword,
 		SecondaryKeywords: body.SecondaryKeywords,
 		CustomTitle:       body.CustomTitle,
+		OverrideTone:      body.OverrideTone,
+		OverrideGuide:     body.OverrideGuide,
 		Status:            "pending",
 	}
 	if err := h.queueRepo.Create(c.UserContext(), item); err != nil {
