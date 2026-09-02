@@ -8,18 +8,18 @@ import (
 )
 
 type KeywordFocusQueue struct {
-	ID                uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	SiteID            uuid.UUID  `gorm:"type:uuid;not null;index;uniqueIndex:idx_site_primary_kw"`
-	Priority          int        `gorm:"not null"`
-	PillarURL         string     `gorm:"size:500"`
-	PrimaryKeyword    string     `gorm:"size:255;not null;uniqueIndex:idx_site_primary_kw"`
-	SecondaryKeywords string     `gorm:"type:text"`
-	Status            string     `gorm:"size:50;default:pending;index"`
-	ArticleID         *uuid.UUID `gorm:"type:uuid"`
-	ErrorMessage      string     `gorm:"type:text"`
-	RetryCount        int        `gorm:"default:0"`
-	CompletedAt       *time.Time
-	CreatedAt         time.Time
+	ID                uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
+	SiteID            uuid.UUID  `gorm:"type:uuid;not null;index;uniqueIndex:idx_site_primary_kw" json:"siteId"`
+	Priority          int        `gorm:"not null" json:"priority"`
+	PillarURL         string     `gorm:"size:500" json:"pillarUrl"`
+	PrimaryKeyword    string     `gorm:"size:255;not null;uniqueIndex:idx_site_primary_kw" json:"primaryKeyword"`
+	SecondaryKeywords string     `gorm:"type:text" json:"secondaryKeywords"`
+	Status            string     `gorm:"size:50;default:pending;index" json:"status"`
+	ArticleID         *uuid.UUID `gorm:"type:uuid" json:"articleId"`
+	ErrorMessage      string     `gorm:"type:text" json:"errorMessage"`
+	RetryCount        int        `gorm:"default:0" json:"retryCount"`
+	CompletedAt       *time.Time `json:"completedAt"`
+	CreatedAt         time.Time  `json:"createdAt"`
 }
 
 func (q *KeywordFocusQueue) BeforeCreate(tx *gorm.DB) error {
