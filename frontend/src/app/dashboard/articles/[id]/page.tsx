@@ -89,7 +89,9 @@ export default function ArticleDetailPage({
   const [pageImages, setPageImages] = useState<{ url: string; alt: string }[]>([])
   const [loadingPageImages, setLoadingPageImages] = useState(false)
   const [settingFeatured, setSettingFeatured] = useState(false)
+  const [uploadingFeatured, setUploadingFeatured] = useState(false)
   const [imageSheetOpen, setImageSheetOpen] = useState(false)
+  const featuredFileRef = useRef<HTMLInputElement>(null)
 
   // Info tab
   const [metrics, setMetrics] = useState<Record<string, any> | null>(null)
@@ -225,6 +227,23 @@ export default function ArticleDetailPage({
       // ignore
     } finally {
       setSettingFeatured(false)
+    }
+  }
+
+  const handleUploadFeatured = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingFeatured(true)
+    try {
+      const result = await articleService.uploadFile(file, "featured")
+      const updated = await articleService.setFeaturedImage(id, result.url)
+      setFeaturedImage(updated.featuredImageUrl || "")
+      setImageSheetOpen(false)
+    } catch {
+      // ignore
+    } finally {
+      setUploadingFeatured(false)
+      if (featuredFileRef.current) featuredFileRef.current.value = ""
     }
   }
 
@@ -918,20 +937,43 @@ export default function ArticleDetailPage({
           </SheetHeader>
 
           <div className="px-4 pb-4">
-            <Button
-              size="sm"
-              variant="outline"
-              className="mb-3 w-full"
-              onClick={handleRefreshPageImages}
-              disabled={loadingPageImages}
-            >
-              {loadingPageImages ? (
-                <Loader2Icon className="mr-1 size-4 animate-spin" />
-              ) : (
-                <RefreshCwIcon className="mr-1 size-4" />
-              )}
-              {loadingPageImages ? "กำลังโหลด..." : "โหลดรูปใหม่"}
-            </Button>
+            <div className="flex gap-2 mb-3">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={handleRefreshPageImages}
+                disabled={loadingPageImages}
+              >
+                {loadingPageImages ? (
+                  <Loader2Icon className="mr-1 size-4 animate-spin" />
+                ) : (
+                  <RefreshCwIcon className="mr-1 size-4" />
+                )}
+                {loadingPageImages ? "กำลังโหลด..." : "โหลดรูปใหม่"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => featuredFileRef.current?.click()}
+                disabled={uploadingFeatured}
+              >
+                {uploadingFeatured ? (
+                  <Loader2Icon className="mr-1 size-4 animate-spin" />
+                ) : (
+                  <UploadIcon className="mr-1 size-4" />
+                )}
+                {uploadingFeatured ? "กำลังอัปโหลด..." : "อัปโหลดจากเครื่อง"}
+              </Button>
+              <input
+                ref={featuredFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadFeatured}
+              />
+            </div>
 
             {loadingPageImages && pageImages.length === 0 && (
               <div className="flex justify-center py-8">
