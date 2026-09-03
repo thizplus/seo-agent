@@ -177,6 +177,11 @@ export default function ArticleDetailPage({
     []
   )
 
+  // Scrape page images callback (for image insert dialog)
+  const handleScrapePageImages = useCallback(async () => {
+    return articleService.getPageImages(id)
+  }, [id])
+
   // --- Featured image handlers ---
   const handleOpenImageSheet = async () => {
     setImageSheetOpen(true)
@@ -887,6 +892,7 @@ export default function ArticleDetailPage({
         onInsert={handleInsertMarkdown}
         onSearch={handleImageSearch}
         onUpload={handleImageUpload}
+        onScrapePageImages={handleScrapePageImages}
       />
       <VideoInsertDialog
         open={videoDialogOpen}

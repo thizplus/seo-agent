@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Loader2Icon, SearchIcon, CheckIcon, UploadIcon } from "lucide-react"
+import { Loader2Icon, SearchIcon, CheckIcon, UploadIcon, GlobeIcon } from "lucide-react"
 
 interface ImageInsertDialogProps {
   open: boolean
@@ -20,6 +20,7 @@ interface ImageInsertDialogProps {
   onInsert: (markdown: string) => void
   onSearch: (keyword: string) => Promise<any[]>
   onUpload: (file: File, altText: string) => Promise<{ url: string; alt_text: string }>
+  onScrapePageImages?: () => Promise<{ url: string; alt: string }[]>
 }
 
 export function ImageInsertDialog({
@@ -28,6 +29,7 @@ export function ImageInsertDialog({
   onInsert,
   onSearch,
   onUpload,
+  onScrapePageImages,
 }: ImageInsertDialogProps) {
   // Search tab
   const [searchKeyword, setSearchKeyword] = useState("")
@@ -45,6 +47,11 @@ export function ImageInsertDialog({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const selectedFile = useRef<File | null>(null)
+
+  // Page images tab
+  const [pageImages, setPageImages] = useState<{ url: string; alt: string }[]>([])
+  const [loadingPage, setLoadingPage] = useState(false)
+  const [pageLoaded, setPageLoaded] = useState(false)
 
   const handleSearch = async () => {
     if (!searchKeyword.trim()) return
@@ -96,6 +103,24 @@ export function ImageInsertDialog({
     }
   }
 
+  const handleLoadPageImages = async () => {
+    if (!onScrapePageImages) return
+    setLoadingPage(true)
+    try {
+      const imgs = await onScrapePageImages()
+      setPageImages(imgs || [])
+      setPageLoaded(true)
+    } catch {
+      setPageImages([])
+    } finally {
+      setLoadingPage(false)
+    }
+  }
+
+  const handlePageTabClick = () => {
+    if (!pageLoaded) handleLoadPageImages()
+  }
+
   const handleClose = () => {
     setSearchKeyword("")
     setSearchResults([])
@@ -105,6 +130,8 @@ export function ImageInsertDialog({
     setUploadAlt("")
     setPreviewUrl(null)
     selectedFile.current = null
+    setPageImages([])
+    setPageLoaded(false)
     onOpenChange(false)
   }
 
@@ -115,14 +142,52 @@ export function ImageInsertDialog({
           <DialogTitle>แทรกรูปภาพ</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="upload">
+        <Tabs defaultValue="page">
           <TabsList>
+            <TabsTrigger value="page" onClick={handlePageTabClick}>รูปจากเว็บ</TabsTrigger>
             <TabsTrigger value="upload">อัปโหลด</TabsTrigger>
             <TabsTrigger value="search">ค้นหารูปฟรี</TabsTrigger>
             <TabsTrigger value="url">ใส่ URL</TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: Upload */}
+          {/* Tab 1: Page Images */}
+          <TabsContent value="page">
+            {loadingPage && (
+              <div className="flex justify-center py-8">
+                <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!loadingPage && pageImages.length === 0 && pageLoaded && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                ไม่พบรูปในหน้าเว็บ
+              </p>
+            )}
+
+            {pageImages.length > 0 && (
+              <div className="columns-2 gap-2 space-y-2 max-h-[350px] overflow-auto">
+                {pageImages.map((img, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      onInsert(`![${img.alt || "image"}](${img.url})`)
+                      handleClose()
+                    }}
+                    className="break-inside-avoid rounded-lg border-2 border-transparent overflow-hidden cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary/30"
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="w-full h-auto"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab 2: Upload */}
           <TabsContent value="upload">
             <div className="flex flex-col gap-3">
               <div>
@@ -165,7 +230,7 @@ export function ImageInsertDialog({
             </div>
           </TabsContent>
 
-          {/* Tab 2: Search */}
+          {/* Tab 3: Search */}
           <TabsContent value="search">
             <div className="flex gap-2 mb-3">
               <Input
@@ -223,7 +288,7 @@ export function ImageInsertDialog({
             )}
           </TabsContent>
 
-          {/* Tab 3: URL */}
+          {/* Tab 4: URL */}
           <TabsContent value="url">
             <div className="flex flex-col gap-3">
               <div>

@@ -118,7 +118,7 @@ export function MarkdownEditor({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b p-1.5 bg-muted/30 rounded-t-md">
+      <div className="flex flex-wrap items-center gap-0.5 border-b p-1.5 bg-muted/30 rounded-t-md sticky top-0 z-10">
         {TOOLBAR_ITEMS.map((item, i) =>
           "type" in item && item.type === "separator" ? (
             <div key={i} className="mx-1 h-5 w-px bg-border" />
