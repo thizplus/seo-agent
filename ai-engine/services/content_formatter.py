@@ -14,6 +14,18 @@ class GutenbergFormatter:
         markdown = re.sub(r'^H3:\s*', '### ', markdown, flags=re.MULTILINE)
         markdown = re.sub(r'^H4:\s*', '#### ', markdown, flags=re.MULTILINE)
 
+        # แปลง YouTube URL (plain text) → embed marker
+        markdown = re.sub(
+            r'^https?://(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+).*$',
+            r'{{youtube:\1}}',
+            markdown, flags=re.MULTILINE
+        )
+        markdown = re.sub(
+            r'^https?://youtu\.be/([a-zA-Z0-9_-]+).*$',
+            r'{{youtube:\1}}',
+            markdown, flags=re.MULTILINE
+        )
+
         # แปลง {{youtube:VIDEO_ID}} → Gutenberg embed block ก่อน split lines
         markdown = re.sub(
             r'\{\{youtube:([a-zA-Z0-9_-]+)\}\}',

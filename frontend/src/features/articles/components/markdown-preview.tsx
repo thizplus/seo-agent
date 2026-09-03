@@ -15,6 +15,16 @@ function preprocessContent(content: string): string {
   content = content.replace(/^H3:\s*/gm, "### ")
   content = content.replace(/^H4:\s*/gm, "#### ")
 
+  // YouTube URL (plain text) → embed
+  content = content.replace(
+    /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+).*$/gm,
+    "{{youtube:$1}}"
+  )
+  content = content.replace(
+    /^https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+).*$/gm,
+    "{{youtube:$1}}"
+  )
+
   return content.replace(
     /\{\{youtube:([a-zA-Z0-9_-]+)\}\}/g,
     '<div class="aspect-video my-4"><iframe src="https://www.youtube.com/embed/$1" class="w-full h-full rounded-lg" frameborder="0" allowfullscreen></iframe></div>'
