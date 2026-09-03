@@ -502,6 +502,23 @@ export default function ArticleDetailPage({
                 />
               </div>
 
+              {/* Meta Description */}
+              <div>
+                <Label className="mb-1">Meta Description</Label>
+                <Textarea
+                  value={metaDesc}
+                  onChange={(e) => handleMetaDescChange(e.target.value)}
+                  rows={2}
+                  className="resize-none"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {metaDesc.length} ตัวอักษร
+                  {metaDesc.length > 160 && (
+                    <span className="text-amber-500 ml-1">(แนะนำไม่เกิน 160)</span>
+                  )}
+                </p>
+              </div>
+
               {/* View mode toggle */}
               <div className="flex gap-1">
                 <Button
@@ -553,22 +570,6 @@ export default function ArticleDetailPage({
                 )}
               </div>
 
-              {/* Meta Description */}
-              <div>
-                <Label className="mb-1">Meta Description</Label>
-                <Textarea
-                  value={metaDesc}
-                  onChange={(e) => handleMetaDescChange(e.target.value)}
-                  rows={3}
-                  className="resize-none"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {metaDesc.length} ตัวอักษร
-                  {metaDesc.length > 160 && (
-                    <span className="text-amber-500 ml-1">(แนะนำไม่เกิน 160)</span>
-                  )}
-                </p>
-              </div>
             </div>
           </TabsContent>
 
