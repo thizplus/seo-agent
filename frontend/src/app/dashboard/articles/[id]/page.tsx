@@ -447,36 +447,39 @@ export default function ArticleDetailPage({
           </p>
         )}
 
-        {/* Featured Image */}
-        {featuredImage ? (
-          <div className="relative rounded-lg overflow-hidden border">
-            <img
-              src={featuredImage}
-              alt="Featured"
-              className="w-full max-h-[250px] object-cover"
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute bottom-2 right-2 opacity-80 hover:opacity-100"
-              onClick={handleOpenImageSheet}
-            >
-              <RefreshCwIcon className="mr-1 size-3.5" />
-              เปลี่ยนรูปหลัก
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 rounded-lg border border-dashed p-4">
-            <ImageIcon className="size-6 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">ยังไม่มีรูปหลัก</p>
-            </div>
-            <Button size="sm" variant="outline" onClick={handleOpenImageSheet}>
-              <ImageIcon className="mr-1 size-3.5" />
-              เลือกรูปหลัก
-            </Button>
-          </div>
-        )}
+        {/* Featured Image — compact row */}
+        <div className="flex items-center gap-3 rounded-lg border p-2">
+          {featuredImage ? (
+            <>
+              <img
+                src={featuredImage}
+                alt="Featured"
+                className="size-14 rounded-md object-cover shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">รูปหลัก</p>
+                <p className="text-xs truncate">{featuredImage.split("/").pop()}</p>
+              </div>
+              <Button size="sm" variant="ghost" onClick={handleOpenImageSheet}>
+                <RefreshCwIcon className="mr-1 size-3.5" />
+                เปลี่ยน
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="size-14 rounded-md border border-dashed flex items-center justify-center shrink-0">
+                <ImageIcon className="size-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">ยังไม่มีรูปหลัก</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={handleOpenImageSheet}>
+                <ImageIcon className="mr-1 size-3.5" />
+                เลือกรูปหลัก
+              </Button>
+            </>
+          )}
+        </div>
 
         {/* Main Tabs */}
         <Tabs defaultValue="editor">
