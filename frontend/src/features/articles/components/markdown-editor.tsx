@@ -26,6 +26,7 @@ interface MarkdownEditorProps {
 
 export interface MarkdownEditorRef {
   insertAtCursorPosition: (text: string) => void
+  scrollToText: (text: string) => void
 }
 
 function insertAtCursor(
@@ -98,7 +99,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       }
     }, [])
 
-    // Expose insertAtCursorPosition ให้ parent ใช้
     useImperativeHandle(ref, () => ({
       insertAtCursorPosition(text: string) {
         const pos = cursorPosRef.current
@@ -106,6 +106,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
           value.substring(0, pos) + text + value.substring(pos)
         onChange(newValue)
         cursorPosRef.current = pos + text.length
+      },
+      scrollToText(searchText: string) {
+        const ta = textareaRef.current
+        if (!ta) return
+        const idx = value.indexOf(searchText)
+        if (idx === -1) return
+        ta.focus()
+        ta.setSelectionRange(idx, idx + searchText.length)
+        // scroll textarea ไปยังตำแหน่งนั้น
+        const linesBefore = value.substring(0, idx).split("\n").length
+        const lineHeight = 20
+        ta.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight)
       },
     }), [value, onChange])
 

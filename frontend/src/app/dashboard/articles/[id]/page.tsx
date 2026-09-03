@@ -394,65 +394,65 @@ export default function ArticleDetailPage({
       />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold">{title || article.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {article.wordCount} คำ &middot; v{article.contentVersion}
-              {isDirty && <span className="ml-2 text-amber-500">(มีการแก้ไข)</span>}
-            </p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            {/* Save */}
-            <Button
-              variant="outline"
-              onClick={handleSave}
-              disabled={!isDirty || updateContent.isPending}
-            >
-              {updateContent.isPending ? (
-                <Loader2Icon className="mr-2 size-4 animate-spin" />
-              ) : (
-                <SaveIcon className="mr-2 size-4" />
-              )}
-              บันทึก
-            </Button>
+        <div>
+          <h1 className="text-2xl font-bold">{title || article.title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {article.wordCount} คำ &middot; v{article.contentVersion}
+            {isDirty && <span className="ml-2 text-amber-500">(มีการแก้ไข)</span>}
+          </p>
+        </div>
 
-            {/* Publish */}
-            {article.publishStatus === "published" && article.publishedUrl ? (
-              <>
-                <a
-                  href={article.publishedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  <ExternalLinkIcon className="mr-2 size-4" />
-                  ดูบนเว็บ
-                </a>
-                <Button
-                  variant="outline"
-                  onClick={handlePublish}
-                  disabled={publishArticle.isPending}
-                >
-                  {publishArticle.isPending ? (
-                    <Loader2Icon className="mr-2 size-4 animate-spin" />
-                  ) : (
-                    <SendIcon className="mr-2 size-4" />
-                  )}
-                  เผยแพร่ใหม่
-                </Button>
-              </>
-            ) : article.status === "completed" ? (
-              <Button onClick={handlePublish} disabled={publishArticle.isPending}>
+        {/* Sticky Action Bar */}
+        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background border-b flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSave}
+            disabled={!isDirty || updateContent.isPending}
+          >
+            {updateContent.isPending ? (
+              <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+            ) : (
+              <SaveIcon className="mr-1 size-3.5" />
+            )}
+            บันทึก
+          </Button>
+
+          {article.publishStatus === "published" && article.publishedUrl ? (
+            <>
+              <a
+                href={article.publishedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <ExternalLinkIcon className="mr-1 size-3.5" />
+                ดูบนเว็บ
+              </a>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handlePublish}
+                disabled={publishArticle.isPending}
+              >
                 {publishArticle.isPending ? (
-                  <Loader2Icon className="mr-2 size-4 animate-spin" />
+                  <Loader2Icon className="mr-1 size-3.5 animate-spin" />
                 ) : (
-                  <SendIcon className="mr-2 size-4" />
+                  <SendIcon className="mr-1 size-3.5" />
                 )}
-                เผยแพร่ไปยัง WordPress
+                เผยแพร่ใหม่
               </Button>
-            ) : null}
-          </div>
+            </>
+          ) : article.status === "completed" ? (
+            <Button size="sm" onClick={handlePublish} disabled={publishArticle.isPending}>
+              {publishArticle.isPending ? (
+                <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+              ) : (
+                <SendIcon className="mr-1 size-3.5" />
+              )}
+              เผยแพร่ไปยัง WordPress
+            </Button>
+          ) : null}
         </div>
 
         {/* Status badges */}
@@ -588,7 +588,10 @@ export default function ArticleDetailPage({
                 )}
                 {viewMode !== "editor" && (
                   <div className="rounded-md border min-h-[500px]">
-                    <MarkdownPreview content={content} />
+                    <MarkdownPreview
+                      content={content}
+                      onHeadingClick={(text) => editorRef.current?.scrollToText(text)}
+                    />
                   </div>
                 )}
               </div>
