@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect, useCallback, useRef } from "react"
+import { use, useState, useEffect, useCallback, useRef, type RefObject } from "react"
 import { PageHeader } from "@/components/page-header"
 import {
   useArticleDetail,
@@ -12,6 +12,7 @@ import {
   ImageInsertDialog,
   VideoInsertDialog,
 } from "@/features/articles"
+import type { MarkdownEditorRef } from "@/features/articles"
 import { NAV_ROUTES } from "@/constants/nav"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -70,6 +71,7 @@ export default function ArticleDetailPage({
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split")
 
   // Dialogs
+  const editorRef = useRef<MarkdownEditorRef>(null)
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
 
@@ -155,7 +157,11 @@ export default function ArticleDetailPage({
   // Insert from dialogs
   const handleInsertMarkdown = useCallback(
     (markdown: string) => {
-      setContent((prev) => prev + "\n" + markdown + "\n")
+      if (editorRef.current) {
+        editorRef.current.insertAtCursorPosition("\n" + markdown + "\n")
+      } else {
+        setContent((prev) => prev + "\n" + markdown + "\n")
+      }
       setIsDirty(true)
     },
     []
@@ -554,6 +560,7 @@ export default function ArticleDetailPage({
               >
                 {viewMode !== "preview" && (
                   <MarkdownEditor
+                    ref={editorRef}
                     value={content}
                     onChange={handleContentChange}
                     onImageClick={() => setImageDialogOpen(true)}
