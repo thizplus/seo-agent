@@ -97,7 +97,7 @@ export const articleService = {
 
   async updateContent(
     id: string,
-    data: { title: string; content: string; metaDescription: string }
+    data: { title: string; slug: string; content: string; metaDescription: string }
   ): Promise<Article> {
     const res = await apiClient.put<{ data: Article }>(
       API_ROUTES.ARTICLES.UPDATE_CONTENT(id),

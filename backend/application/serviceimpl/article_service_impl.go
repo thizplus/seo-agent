@@ -452,6 +452,9 @@ func (s *articleServiceImpl) UpdateContent(ctx context.Context, id uuid.UUID, re
 	if req.Title != "" {
 		article.Title = req.Title
 	}
+	if req.Slug != "" {
+		article.Slug = req.Slug
+	}
 	if req.Content != "" {
 		article.Content = req.Content
 		// นับ word count ใหม่

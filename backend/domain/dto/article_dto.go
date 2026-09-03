@@ -20,6 +20,7 @@ type GenerateArticleRequest struct {
 
 type UpdateContentRequest struct {
 	Title           string `json:"title"`
+	Slug            string `json:"slug"`
 	Content         string `json:"content"`
 	MetaDescription string `json:"metaDescription"`
 }

@@ -44,7 +44,7 @@ export function useUpdateContent() {
       data,
     }: {
       id: string
-      data: { title: string; content: string; metaDescription: string }
+      data: { title: string; slug: string; content: string; metaDescription: string }
     }) => articleService.updateContent(id, data),
     onSuccess: (article) => {
       queryClient.invalidateQueries({

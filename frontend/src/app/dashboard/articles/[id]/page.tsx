@@ -66,6 +66,7 @@ export default function ArticleDetailPage({
   // Editor state
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [slug, setSlug] = useState("")
   const [metaDesc, setMetaDesc] = useState("")
   const [isDirty, setIsDirty] = useState(false)
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split")
@@ -103,6 +104,7 @@ export default function ArticleDetailPage({
   useEffect(() => {
     if (article) {
       setTitle(article.title)
+      setSlug(article.slug)
       setContent(article.content)
       setMetaDesc(article.metaDescription)
       setFeaturedImage(article.featuredImageUrl || "")
@@ -125,7 +127,7 @@ export default function ArticleDetailPage({
     autoSaveTimer.current = setTimeout(() => {
       updateContent.mutate({
         id,
-        data: { title, content, metaDescription: metaDesc },
+        data: { title, slug, content, metaDescription: metaDesc },
       })
       setIsDirty(false)
     }, 60000)
@@ -143,6 +145,10 @@ export default function ArticleDetailPage({
     setTitle(val)
     setIsDirty(true)
   }, [])
+  const handleSlugChange = useCallback((val: string) => {
+    setSlug(val.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-"))
+    setIsDirty(true)
+  }, [])
   const handleMetaDescChange = useCallback((val: string) => {
     setMetaDesc(val)
     setIsDirty(true)
@@ -151,7 +157,7 @@ export default function ArticleDetailPage({
   // Save
   const handleSave = () => {
     updateContent.mutate(
-      { id, data: { title, content, metaDescription: metaDesc } },
+      { id, data: { title, slug, content, metaDescription: metaDesc } },
       { onSuccess: () => setIsDirty(false) }
     )
   }
@@ -470,6 +476,17 @@ export default function ArticleDetailPage({
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
                   className="text-lg font-semibold"
+                />
+              </div>
+
+              {/* Slug */}
+              <div>
+                <Label className="mb-1">Slug (URL)</Label>
+                <Input
+                  value={slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  className="font-mono text-sm"
+                  placeholder="my-article-slug"
                 />
               </div>
 
@@ -846,18 +863,7 @@ export default function ArticleDetailPage({
                 </CardContent>
               </Card>
 
-              {/* Delete */}
-              <Card>
-                <CardContent className="pt-6">
-                  <Button variant="destructive" onClick={handleDeleteArticle}>
-                    <Trash2Icon className="mr-2 size-4" />
-                    ลบบทความ
-                  </Button>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    จะลบจาก WordPress + รูปทั้งหมดด้วย
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Delete อยู่ใน bottom bar */}
             </div>
           </TabsContent>
         </Tabs>
@@ -879,7 +885,16 @@ export default function ArticleDetailPage({
       />
 
       {/* Fixed Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background px-4 py-2 flex items-center justify-end gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background px-4 py-2 flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={handleDeleteArticle}
+        >
+          <Trash2Icon className="mr-1 size-3.5" />
+          ลบ
+        </Button>
+        <div className="flex-1" />
         <Button
           size="sm"
           variant="outline"
