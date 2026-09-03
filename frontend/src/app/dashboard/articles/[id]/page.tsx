@@ -392,7 +392,7 @@ export default function ArticleDetailPage({
           { label: "รายละเอียดบทความ" },
         ]}
       />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0 pb-16">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">{title || article.title}</h1>
@@ -402,58 +402,7 @@ export default function ArticleDetailPage({
           </p>
         </div>
 
-        {/* Sticky Action Bar */}
-        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background border-b flex items-center gap-2 flex-wrap">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSave}
-            disabled={!isDirty || updateContent.isPending}
-          >
-            {updateContent.isPending ? (
-              <Loader2Icon className="mr-1 size-3.5 animate-spin" />
-            ) : (
-              <SaveIcon className="mr-1 size-3.5" />
-            )}
-            บันทึก
-          </Button>
-
-          {article.publishStatus === "published" && article.publishedUrl ? (
-            <>
-              <a
-                href={article.publishedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                <ExternalLinkIcon className="mr-1 size-3.5" />
-                ดูบนเว็บ
-              </a>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handlePublish}
-                disabled={publishArticle.isPending}
-              >
-                {publishArticle.isPending ? (
-                  <Loader2Icon className="mr-1 size-3.5 animate-spin" />
-                ) : (
-                  <SendIcon className="mr-1 size-3.5" />
-                )}
-                เผยแพร่ใหม่
-              </Button>
-            </>
-          ) : article.status === "completed" ? (
-            <Button size="sm" onClick={handlePublish} disabled={publishArticle.isPending}>
-              {publishArticle.isPending ? (
-                <Loader2Icon className="mr-1 size-3.5 animate-spin" />
-              ) : (
-                <SendIcon className="mr-1 size-3.5" />
-              )}
-              เผยแพร่ไปยัง WordPress
-            </Button>
-          ) : null}
-        </div>
+        {/* Action bar — ไม่ sticky ปกติ */}
 
         {/* Status badges */}
         <div className="flex gap-2">
@@ -928,6 +877,58 @@ export default function ArticleDetailPage({
         onOpenChange={setVideoDialogOpen}
         onInsert={handleInsertMarkdown}
       />
+
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background px-4 py-2 flex items-center justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSave}
+          disabled={!isDirty || updateContent.isPending}
+        >
+          {updateContent.isPending ? (
+            <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+          ) : (
+            <SaveIcon className="mr-1 size-3.5" />
+          )}
+          บันทึก
+        </Button>
+
+        {article.publishStatus === "published" && article.publishedUrl ? (
+          <>
+            <a
+              href={article.publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <ExternalLinkIcon className="mr-1 size-3.5" />
+              ดูบนเว็บ
+            </a>
+            <Button
+              size="sm"
+              onClick={handlePublish}
+              disabled={publishArticle.isPending}
+            >
+              {publishArticle.isPending ? (
+                <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+              ) : (
+                <SendIcon className="mr-1 size-3.5" />
+              )}
+              เผยแพร่ใหม่
+            </Button>
+          </>
+        ) : article.status === "completed" ? (
+          <Button size="sm" onClick={handlePublish} disabled={publishArticle.isPending}>
+            {publishArticle.isPending ? (
+              <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+            ) : (
+              <SendIcon className="mr-1 size-3.5" />
+            )}
+            เผยแพร่ไปยัง WordPress
+          </Button>
+        ) : null}
+      </div>
 
       {/* Featured Image Sheet */}
       <Sheet open={imageSheetOpen} onOpenChange={setImageSheetOpen}>
