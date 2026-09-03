@@ -932,12 +932,12 @@ export default function ArticleDetailPage({
               </p>
             )}
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="columns-2 gap-2 space-y-2">
               {pageImages.map((img, i) => (
                 <div
                   key={i}
                   onClick={() => !settingFeatured && handleSetFeatured(img.url)}
-                  className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${
+                  className={`break-inside-avoid rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${
                     featuredImage === img.url
                       ? "border-primary ring-2 ring-primary/30"
                       : "border-transparent hover:border-muted-foreground/30"
@@ -946,7 +946,7 @@ export default function ArticleDetailPage({
                   <img
                     src={img.url}
                     alt={img.alt}
-                    className="w-full aspect-video object-cover"
+                    className="w-full h-auto"
                     loading="lazy"
                   />
                 </div>
