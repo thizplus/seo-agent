@@ -449,18 +449,15 @@ export default function ArticleDetailPage({
 
         {/* Featured Image */}
         {featuredImage ? (
-          <div className="relative rounded-lg overflow-hidden border">
-            <img
-              src={featuredImage}
-              alt="Featured"
-              className="w-full max-h-[200px] object-cover"
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute bottom-2 right-2 opacity-80 hover:opacity-100"
-              onClick={handleOpenImageSheet}
-            >
+          <div className="flex items-start gap-3">
+            <div className="relative rounded-lg overflow-hidden border shrink-0 max-w-[280px]">
+              <img
+                src={featuredImage}
+                alt="Featured"
+                className="w-full max-h-[160px] object-cover"
+              />
+            </div>
+            <Button size="sm" variant="outline" onClick={handleOpenImageSheet} className="shrink-0 mt-1">
               <RefreshCwIcon className="mr-1 size-3.5" />
               เปลี่ยนรูปหลัก
             </Button>
