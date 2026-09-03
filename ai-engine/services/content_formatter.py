@@ -178,13 +178,14 @@ class GutenbergFormatter:
         return f'<!-- wp:image -->\n<figure class="wp-block-image size-large"><img src="{url}" alt="{alt}" /></figure>\n<!-- /wp:image -->'
 
     def _make_youtube(self, video_id: str) -> str:
-        url = f"https://www.youtube.com/watch?v={video_id}"
         return (
-            f'<!-- wp:embed {{"url":"{url}","type":"video","providerNameSlug":"youtube"}} -->\n'
-            f'<figure class="wp-block-embed is-type-video is-provider-youtube">'
-            f'<div class="wp-block-embed__wrapper">{url}</div>'
-            f'</figure>\n'
-            f'<!-- /wp:embed -->'
+            f'<!-- wp:html -->\n'
+            f'<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5em 0">'
+            f'<iframe src="https://www.youtube.com/embed/{video_id}" '
+            f'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" '
+            f'allowfullscreen></iframe>'
+            f'</div>\n'
+            f'<!-- /wp:html -->'
         )
 
     def _make_table(self, lines: list[str]) -> str:
