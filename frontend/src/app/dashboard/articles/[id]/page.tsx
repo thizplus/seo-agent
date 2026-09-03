@@ -153,6 +153,14 @@ export default function ArticleDetailPage({
     []
   )
 
+  // Image upload callback (layer: Page -> Dialog)
+  const handleImageUpload = useCallback(
+    async (file: File, altText: string) => {
+      return articleService.uploadFile(file, altText)
+    },
+    []
+  )
+
   // --- Images tab handlers ---
   const handleSearchImages = async () => {
     if (!article) return
@@ -795,6 +803,7 @@ export default function ArticleDetailPage({
         onOpenChange={setImageDialogOpen}
         onInsert={handleInsertMarkdown}
         onSearch={handleImageSearch}
+        onUpload={handleImageUpload}
       />
       <VideoInsertDialog
         open={videoDialogOpen}

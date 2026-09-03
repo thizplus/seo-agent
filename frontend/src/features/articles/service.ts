@@ -68,6 +68,18 @@ export const articleService = {
     return res.data.data
   },
 
+  async uploadFile(file: File, altText: string = ""): Promise<{ url: string; alt_text: string }> {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("alt_text", altText)
+    const res = await apiClient.post<{ data: { url: string; alt_text: string } }>(
+      API_ROUTES.ARTICLES.UPLOAD_FILE,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    )
+    return res.data.data
+  },
+
   async updateContent(
     id: string,
     data: { title: string; content: string; metaDescription: string }

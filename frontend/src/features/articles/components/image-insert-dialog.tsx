@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   Dialog,
   DialogContent,
@@ -12,13 +12,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Loader2Icon, SearchIcon, CheckIcon } from "lucide-react"
+import { Loader2Icon, SearchIcon, CheckIcon, UploadIcon } from "lucide-react"
 
 interface ImageInsertDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onInsert: (markdown: string) => void
   onSearch: (keyword: string) => Promise<any[]>
+  onUpload: (file: File, altText: string) => Promise<{ url: string; alt_text: string }>
 }
 
 export function ImageInsertDialog({
@@ -26,6 +27,7 @@ export function ImageInsertDialog({
   onOpenChange,
   onInsert,
   onSearch,
+  onUpload,
 }: ImageInsertDialogProps) {
   // Search tab
   const [searchKeyword, setSearchKeyword] = useState("")
@@ -36,6 +38,13 @@ export function ImageInsertDialog({
   // URL tab
   const [imageUrl, setImageUrl] = useState("")
   const [altText, setAltText] = useState("")
+
+  // Upload tab
+  const [uploading, setUploading] = useState(false)
+  const [uploadAlt, setUploadAlt] = useState("")
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const selectedFile = useRef<File | null>(null)
 
   const handleSearch = async () => {
     if (!searchKeyword.trim()) return
@@ -65,12 +74,37 @@ export function ImageInsertDialog({
     handleClose()
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    selectedFile.current = file
+    setPreviewUrl(URL.createObjectURL(file))
+    if (!uploadAlt) setUploadAlt(file.name.replace(/\.[^.]+$/, ""))
+  }
+
+  const handleUpload = async () => {
+    if (!selectedFile.current) return
+    setUploading(true)
+    try {
+      const result = await onUpload(selectedFile.current, uploadAlt)
+      onInsert(`![${uploadAlt || "image"}](${result.url})`)
+      handleClose()
+    } catch {
+      // ignore
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleClose = () => {
     setSearchKeyword("")
     setSearchResults([])
     setSelectedIndex(null)
     setImageUrl("")
     setAltText("")
+    setUploadAlt("")
+    setPreviewUrl(null)
+    selectedFile.current = null
     onOpenChange(false)
   }
 
@@ -81,13 +115,57 @@ export function ImageInsertDialog({
           <DialogTitle>แทรกรูปภาพ</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="search">
+        <Tabs defaultValue="upload">
           <TabsList>
+            <TabsTrigger value="upload">อัปโหลด</TabsTrigger>
             <TabsTrigger value="search">ค้นหารูปฟรี</TabsTrigger>
             <TabsTrigger value="url">ใส่ URL</TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: Search */}
+          {/* Tab 1: Upload */}
+          <TabsContent value="upload">
+            <div className="flex flex-col gap-3">
+              <div>
+                <Label>เลือกไฟล์รูปภาพ</Label>
+                <Input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="cursor-pointer"
+                />
+              </div>
+              <div>
+                <Label>Alt Text</Label>
+                <Input
+                  placeholder="คำอธิบายรูปภาพ"
+                  value={uploadAlt}
+                  onChange={(e) => setUploadAlt(e.target.value)}
+                />
+              </div>
+              {previewUrl && (
+                <div className="rounded-lg border overflow-hidden">
+                  <img
+                    src={previewUrl}
+                    alt={uploadAlt}
+                    className="w-full max-h-[200px] object-contain"
+                  />
+                </div>
+              )}
+              <DialogFooter>
+                <Button onClick={handleUpload} disabled={!selectedFile.current || uploading}>
+                  {uploading ? (
+                    <Loader2Icon className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <UploadIcon className="mr-2 size-4" />
+                  )}
+                  {uploading ? "กำลังอัปโหลด..." : "อัปโหลดและแทรก"}
+                </Button>
+              </DialogFooter>
+            </div>
+          </TabsContent>
+
+          {/* Tab 2: Search */}
           <TabsContent value="search">
             <div className="flex gap-2 mb-3">
               <Input
@@ -145,7 +223,7 @@ export function ImageInsertDialog({
             )}
           </TabsContent>
 
-          {/* Tab 2: URL */}
+          {/* Tab 3: URL */}
           <TabsContent value="url">
             <div className="flex flex-col gap-3">
               <div>

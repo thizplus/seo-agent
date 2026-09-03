@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -112,6 +114,43 @@ func (c *HTTPClient) CrawlPages(ctx context.Context, req map[string]any) (map[st
 
 func (c *HTTPClient) AnalyzePage(ctx context.Context, req map[string]any) (map[string]any, error) {
 	return c.call(ctx, "/analyze-page", req)
+}
+
+func (c *HTTPClient) UploadFile(ctx context.Context, fileData []byte, filename string, altText string) (map[string]any, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := io.Copy(part, bytes.NewReader(fileData)); err != nil {
+		return nil, err
+	}
+	writer.WriteField("alt_text", altText)
+	writer.Close()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/upload-file", body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("AI engine upload returned status %d", resp.StatusCode)
+	}
+
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (c *HTTPClient) AnalyzeSERP(ctx context.Context, keyword string) (map[string]any, error) {

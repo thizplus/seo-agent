@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 
 from models.schemas import (
     AnalyzePageRequest,
@@ -362,6 +362,46 @@ async def auto_pipeline(req: AutoPipelineRequest):
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/upload-file")
+async def upload_file(file: UploadFile = File(...), alt_text: str = Form("")):
+    """Upload รูปจากเครื่อง → แปลง WebP → เก็บใน R2 → return URL"""
+    try:
+        import io
+        from PIL import Image
+
+        image_bytes = await file.read()
+
+        # แปลงเป็น WebP
+        img = Image.open(io.BytesIO(image_bytes))
+        if img.width > 1200:
+            img = img.resize((1200, int(img.height * 1200 / img.width)), Image.LANCZOS)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        out = io.BytesIO()
+        img.save(out, format="WEBP", quality=80)
+        webp_bytes = out.getvalue()
+
+        # Upload ไป R2
+        r2 = container.create_r2_storage()
+        filename = file.filename or "upload.webp"
+        if not filename.endswith(".webp"):
+            filename = filename.rsplit(".", 1)[0] + ".webp"
+
+        url = await r2.upload(webp_bytes, filename, alt_text=alt_text)
+
+        return {
+            "success": True,
+            "data": {
+                "url": url,
+                "alt_text": alt_text,
+                "format": "webp",
+                "file_size_kb": len(webp_bytes) // 1024,
+            },
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/analyze-serp")

@@ -7,16 +7,18 @@ import (
 	"github.com/google/uuid"
 
 	"seo-agents-backend/domain/dto"
+	"seo-agents-backend/domain/ports"
 	"seo-agents-backend/domain/services"
 	"seo-agents-backend/pkg/utils"
 )
 
 type ArticleHandler struct {
 	articleService services.ArticleService
+	aiEngine       ports.AIEnginePort
 }
 
-func NewArticleHandler(articleService services.ArticleService) *ArticleHandler {
-	return &ArticleHandler{articleService: articleService}
+func NewArticleHandler(articleService services.ArticleService, aiEngine ports.AIEnginePort) *ArticleHandler {
+	return &ArticleHandler{articleService: articleService, aiEngine: aiEngine}
 }
 
 func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
@@ -35,6 +37,33 @@ func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
 	}
 
 	return utils.CreatedResponse(c, dto.ArticleToResponse(article))
+}
+
+func (h *ArticleHandler) UploadFile(c *fiber.Ctx) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return utils.BadRequestResponse(c, "file is required")
+	}
+	altText := c.FormValue("alt_text", "")
+
+	f, err := file.Open()
+	if err != nil {
+		return utils.BadRequestResponse(c, "failed to read file")
+	}
+	defer f.Close()
+
+	fileData := make([]byte, file.Size)
+	if _, err := f.Read(fileData); err != nil {
+		return utils.BadRequestResponse(c, "failed to read file data")
+	}
+
+	result, err := h.aiEngine.UploadFile(c.UserContext(), fileData, file.Filename, altText)
+	if err != nil {
+		slog.Error("Upload file failed", "error", err)
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	return utils.SuccessResponse(c, result["data"])
 }
 
 func (h *ArticleHandler) UpdateContent(c *fiber.Ctx) error {

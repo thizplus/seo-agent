@@ -102,6 +102,18 @@ class Container:
         from infrastructure.adapters.wp_media_adapter import WordPressMediaAdapter
         return WordPressMediaAdapter(wp_url, wp_username, wp_app_password)
 
+    def create_r2_storage(self) -> ImageStoragePort:
+        """สร้าง R2 Storage adapter จาก env vars"""
+        import os
+        from infrastructure.adapters.r2_storage_adapter import R2StorageAdapter
+        return R2StorageAdapter(
+            bucket=os.getenv("S3_BUCKET", ""),
+            access_key=os.getenv("S3_ACCESS_KEY_ID", ""),
+            secret_key=os.getenv("S3_SECRET_ACCESS_KEY", ""),
+            endpoint=os.getenv("S3_ENDPOINT", ""),
+            base_url=os.getenv("S3_BASE_URL", ""),
+        )
+
     def create_image_generator(
         self, llm: LLMPort, image_gen: ImageGenerationPort, image_storage: ImageStoragePort
     ) -> ImageGenerator:
