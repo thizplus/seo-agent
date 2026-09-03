@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math/rand"
 
 	"github.com/google/uuid"
 
@@ -107,7 +108,7 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 
 	s.saveVersion(article, "initial")
 
-	// Fetch SERP data สำหรับ keyword นี้ + เก็บลง DB
+	// Background: Fetch SERP data
 	go func() {
 		bgCtx := context.Background()
 		serpResp, err := s.aiEngine.AnalyzeSERP(bgCtx, keyword.Keyword)
@@ -465,6 +466,86 @@ func (s *articleServiceImpl) UpdateContent(ctx context.Context, id uuid.UUID, re
 
 	s.saveVersion(article, "manual_edit")
 	slog.InfoContext(ctx, "Article content updated", "article_id", id)
+	return article, nil
+}
+
+func (s *articleServiceImpl) RandomFeaturedImage(ctx context.Context, id uuid.UUID) (*models.Article, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("article not found: %w", err)
+	}
+	if article.KeywordID == nil {
+		return nil, fmt.Errorf("article has no keyword")
+	}
+	keyword, err := s.keywordRepo.GetByID(ctx, *article.KeywordID)
+	if err != nil || keyword.PageID == nil {
+		return nil, fmt.Errorf("keyword has no page")
+	}
+
+	// ดึงรูปจาก page → random 1 รูป
+	var page models.SitePage
+	if err := s.db.WithContext(ctx).First(&page, *keyword.PageID).Error; err != nil {
+		return nil, fmt.Errorf("page not found: %w", err)
+	}
+
+	resp, err := s.aiEngine.ScrapePageImages(ctx, page.URL)
+	if err != nil {
+		return nil, fmt.Errorf("scrape failed: %w", err)
+	}
+	data, ok := resp["data"].([]any)
+	if !ok || len(data) == 0 {
+		return nil, fmt.Errorf("no images found on page")
+	}
+
+	idx := rand.Intn(len(data))
+	imgMap, _ := data[idx].(map[string]any)
+	article.FeaturedImageURL = getStr(imgMap, "url")
+	s.articleRepo.Update(ctx, article)
+	return article, nil
+}
+
+func (s *articleServiceImpl) ScrapePageImagesForArticle(ctx context.Context, id uuid.UUID) ([]map[string]any, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if article.KeywordID == nil {
+		return nil, fmt.Errorf("article has no keyword")
+	}
+	keyword, err := s.keywordRepo.GetByID(ctx, *article.KeywordID)
+	if err != nil || keyword.PageID == nil {
+		return nil, fmt.Errorf("keyword has no page")
+	}
+	var page models.SitePage
+	if err := s.db.WithContext(ctx).First(&page, *keyword.PageID).Error; err != nil {
+		return nil, err
+	}
+	resp, err := s.aiEngine.ScrapePageImages(ctx, page.URL)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := resp["data"].([]any)
+	if !ok {
+		return nil, fmt.Errorf("no images")
+	}
+	result := make([]map[string]any, 0, len(data))
+	for _, item := range data {
+		if m, ok := item.(map[string]any); ok {
+			result = append(result, m)
+		}
+	}
+	return result, nil
+}
+
+func (s *articleServiceImpl) SetFeaturedImage(ctx context.Context, id uuid.UUID, imageURL string) (*models.Article, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	article.FeaturedImageURL = imageURL
+	if err := s.articleRepo.Update(ctx, article); err != nil {
+		return nil, err
+	}
 	return article, nil
 }
 

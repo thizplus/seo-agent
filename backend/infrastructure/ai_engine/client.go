@@ -116,6 +116,10 @@ func (c *HTTPClient) AnalyzePage(ctx context.Context, req map[string]any) (map[s
 	return c.call(ctx, "/analyze-page", req)
 }
 
+func (c *HTTPClient) ScrapePageImages(ctx context.Context, pageURL string) (map[string]any, error) {
+	return c.call(ctx, "/scrape-page-images", map[string]string{"page_url": pageURL})
+}
+
 func (c *HTTPClient) UploadFile(ctx context.Context, fileData []byte, filename string, altText string) (map[string]any, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)

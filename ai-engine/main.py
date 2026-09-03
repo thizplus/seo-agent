@@ -23,6 +23,7 @@ from models.schemas import (
     DeleteMediaRequest,
     DeleteWPPostRequest,
     AutoPipelineRequest,
+    ScrapePageImagesRequest,
     HealthResponse,
 )
 from pkg.di.container import Container
@@ -362,6 +363,65 @@ async def auto_pipeline(req: AutoPipelineRequest):
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/scrape-page-images")
+async def scrape_page_images(req: ScrapePageImagesRequest):
+    """ดึง URL รูปทั้งหมดจากหน้าเว็บ"""
+    import re
+    from urllib.parse import urljoin
+    try:
+        import httpx
+        from bs4 import BeautifulSoup
+
+        async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+            resp = await client.get(req.page_url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            })
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        images = []
+        seen_urls = set()
+
+        # Filter patterns
+        skip_patterns = re.compile(r"(logo|icon|favicon|sprite|placeholder|pixel|tracking|gravatar|avatar|badge|button)", re.I)
+        valid_ext = re.compile(r"\.(jpg|jpeg|png|webp|gif)(\?.*)?$", re.I)
+
+        for img in soup.find_all("img"):
+            src = img.get("src", "")
+            if not src or src.startswith("data:"):
+                continue
+
+            # Absolute URL
+            url = urljoin(req.page_url, src)
+            if not url.startswith("http"):
+                continue
+
+            # Skip duplicates
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+
+            # Skip icons/logos
+            if skip_patterns.search(url):
+                continue
+
+            # Valid image extension (or no extension = could be dynamic)
+            has_ext = "." in url.split("/")[-1].split("?")[0]
+            if has_ext and not valid_ext.search(url):
+                continue
+
+            # Width filter
+            width = img.get("width", "")
+            if width and str(width).isdigit() and int(width) < 200:
+                continue
+
+            alt = img.get("alt", "")
+            images.append({"url": url, "alt": alt})
+
+        return {"success": True, "data": images}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/upload-file")

@@ -42,6 +42,7 @@ import {
   EyeIcon,
   SplitIcon,
   PenLineIcon,
+  RefreshCwIcon,
 } from "lucide-react"
 
 export default function ArticleDetailPage({
@@ -74,6 +75,12 @@ export default function ArticleDetailPage({
   const [featuredIndex, setFeaturedIndex] = useState<number>(0)
   const [images, setImages] = useState<any[]>([])
 
+  // Featured image
+  const [featuredImage, setFeaturedImage] = useState("")
+  const [pageImages, setPageImages] = useState<{ url: string; alt: string }[]>([])
+  const [loadingPageImages, setLoadingPageImages] = useState(false)
+  const [settingFeatured, setSettingFeatured] = useState(false)
+
   // Info tab
   const [metrics, setMetrics] = useState<Record<string, any> | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(false)
@@ -86,6 +93,7 @@ export default function ArticleDetailPage({
       setTitle(article.title)
       setContent(article.content)
       setMetaDesc(article.metaDescription)
+      setFeaturedImage(article.featuredImageUrl || "")
       setIsDirty(false)
     }
   }, [article])
@@ -160,6 +168,31 @@ export default function ArticleDetailPage({
     },
     []
   )
+
+  // --- Featured image handlers ---
+  const handleLoadPageImages = async () => {
+    setLoadingPageImages(true)
+    try {
+      const imgs = await articleService.getPageImages(id)
+      setPageImages(imgs || [])
+    } catch {
+      setPageImages([])
+    } finally {
+      setLoadingPageImages(false)
+    }
+  }
+
+  const handleSetFeatured = async (imageUrl: string) => {
+    setSettingFeatured(true)
+    try {
+      const updated = await articleService.setFeaturedImage(id, imageUrl)
+      setFeaturedImage(updated.featuredImageUrl || "")
+    } catch {
+      // ignore
+    } finally {
+      setSettingFeatured(false)
+    }
+  }
 
   // --- Images tab handlers ---
   const handleSearchImages = async () => {
@@ -390,6 +423,82 @@ export default function ArticleDetailPage({
             เผยแพร่ล้มเหลว: {publishArticle.error.message}
           </p>
         )}
+
+        {/* Featured Image */}
+        <Card>
+          <CardContent className="pt-4">
+            {featuredImage ? (
+              <div className="relative">
+                <img
+                  src={featuredImage}
+                  alt="Featured"
+                  className="w-full max-h-[300px] object-cover rounded-lg"
+                />
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleLoadPageImages}
+                    disabled={loadingPageImages}
+                  >
+                    {loadingPageImages ? (
+                      <Loader2Icon className="mr-1 size-4 animate-spin" />
+                    ) : (
+                      <RefreshCwIcon className="mr-1 size-4" />
+                    )}
+                    เปลี่ยนรูปหลัก
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-4 text-muted-foreground">
+                <ImageIcon className="size-8" />
+                <p className="text-sm">ยังไม่มีรูปหลัก</p>
+                <Button
+                  size="sm"
+                  onClick={handleLoadPageImages}
+                  disabled={loadingPageImages}
+                >
+                  {loadingPageImages ? (
+                    <Loader2Icon className="mr-1 size-4 animate-spin" />
+                  ) : (
+                    <ImageIcon className="mr-1 size-4" />
+                  )}
+                  ดึงรูปจากหน้าเว็บ
+                </Button>
+              </div>
+            )}
+
+            {/* Page images picker */}
+            {pageImages.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm text-muted-foreground mb-2">
+                  คลิกเลือกรูปหลัก ({pageImages.length} รูป)
+                </p>
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-[250px] overflow-auto">
+                  {pageImages.map((img, i) => (
+                    <div
+                      key={i}
+                      onClick={() => !settingFeatured && handleSetFeatured(img.url)}
+                      className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${
+                        featuredImage === img.url
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "border-transparent hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.alt}
+                        className="w-full aspect-video object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Main Tabs */}
         <Tabs defaultValue="editor">

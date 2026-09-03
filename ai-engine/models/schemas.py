@@ -179,6 +179,10 @@ class AutoPipelineRequest(BaseModel):
     llm_api_key: str = ""
 
 
+class ScrapePageImagesRequest(BaseModel):
+    page_url: str
+
+
 class HealthResponse(BaseModel):
     status: str
     service: str

@@ -25,4 +25,5 @@ type AIEnginePort interface {
 	CrawlPages(ctx context.Context, req map[string]any) (map[string]any, error)
 	AnalyzePage(ctx context.Context, req map[string]any) (map[string]any, error)
 	UploadFile(ctx context.Context, fileData []byte, filename string, altText string) (map[string]any, error)
+	ScrapePageImages(ctx context.Context, pageURL string) (map[string]any, error)
 }

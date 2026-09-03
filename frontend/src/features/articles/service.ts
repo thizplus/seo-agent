@@ -68,6 +68,21 @@ export const articleService = {
     return res.data.data
   },
 
+  async getPageImages(id: string): Promise<{ url: string; alt: string }[]> {
+    const res = await apiClient.get<{ data: { url: string; alt: string }[] }>(
+      API_ROUTES.ARTICLES.PAGE_IMAGES(id)
+    )
+    return res.data.data
+  },
+
+  async setFeaturedImage(id: string, imageUrl: string): Promise<Article> {
+    const res = await apiClient.put<{ data: Article }>(
+      API_ROUTES.ARTICLES.FEATURED_IMAGE(id),
+      { imageUrl }
+    )
+    return res.data.data
+  },
+
   async uploadFile(file: File, altText: string = ""): Promise<{ url: string; alt_text: string }> {
     const formData = new FormData()
     formData.append("file", file)

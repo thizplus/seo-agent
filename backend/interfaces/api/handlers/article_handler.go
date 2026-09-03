@@ -39,6 +39,36 @@ func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
 	return utils.CreatedResponse(c, dto.ArticleToResponse(article))
 }
 
+func (h *ArticleHandler) ScrapePageImages(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+	images, err := h.articleService.ScrapePageImagesForArticle(c.UserContext(), id)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+	return utils.SuccessResponse(c, images)
+}
+
+func (h *ArticleHandler) SetFeaturedImage(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+	var body struct {
+		ImageURL string `json:"imageUrl"`
+	}
+	if err := c.BodyParser(&body); err != nil || body.ImageURL == "" {
+		return utils.BadRequestResponse(c, "imageUrl is required")
+	}
+	article, err := h.articleService.SetFeaturedImage(c.UserContext(), id, body.ImageURL)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+	return utils.SuccessResponse(c, dto.ArticleToResponse(article))
+}
+
 func (h *ArticleHandler) UploadFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {

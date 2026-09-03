@@ -12,6 +12,7 @@ export interface Article {
   status: "pending" | "generating" | "completed" | "failed"
   publishStatus: "draft" | "scheduled" | "published" | "updated"
   publishedUrl: string
+  featuredImageUrl: string
   cmsPostId: string
   wordCount: number
   createdAt: string

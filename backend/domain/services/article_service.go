@@ -22,6 +22,9 @@ type ArticleService interface {
 	GetImages(ctx context.Context, id uuid.UUID) ([]models.ArticleImage, error)
 	DeleteImage(ctx context.Context, articleID uuid.UUID, imageID uuid.UUID) error
 	UpdateContent(ctx context.Context, id uuid.UUID, req *dto.UpdateContentRequest) (*models.Article, error)
+	RandomFeaturedImage(ctx context.Context, id uuid.UUID) (*models.Article, error)
+	ScrapePageImagesForArticle(ctx context.Context, id uuid.UUID) ([]map[string]any, error)
+	SetFeaturedImage(ctx context.Context, id uuid.UUID, imageURL string) (*models.Article, error)
 	DeleteArticleFull(ctx context.Context, id uuid.UUID) error
 	GetVersions(ctx context.Context, id uuid.UUID) ([]models.ArticleVersion, error)
 }

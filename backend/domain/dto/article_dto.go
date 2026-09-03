@@ -43,8 +43,9 @@ type ArticleResponse struct {
 	EEATScore       any       `json:"eeatScore"`
 	Status          string    `json:"status"`
 	PublishStatus   string    `json:"publishStatus"`
-	PublishedURL    string    `json:"publishedUrl"`
-	WordCount       int       `json:"wordCount"`
+	PublishedURL     string    `json:"publishedUrl"`
+	FeaturedImageURL string   `json:"featuredImageUrl"`
+	WordCount        int      `json:"wordCount"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
 }
@@ -73,8 +74,9 @@ func ArticleToResponse(a *models.Article) *ArticleResponse {
 		EEATScore:       jsonOrNil(a.EEATScore),
 		Status:          a.Status,
 		PublishStatus:   a.PublishStatus,
-		PublishedURL:    a.PublishedURL,
-		WordCount:       a.WordCount,
+		PublishedURL:     a.PublishedURL,
+		FeaturedImageURL: a.FeaturedImageURL,
+		WordCount:        a.WordCount,
 		CreatedAt:       a.CreatedAt,
 		UpdatedAt:       a.UpdatedAt,
 	}
