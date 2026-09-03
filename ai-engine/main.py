@@ -93,10 +93,62 @@ async def expand_article(req: ExpandArticleRequest):
 async def publish_article(req: PublishArticleRequest):
     try:
         cms = container.create_cms(req.wpUrl, req.wpUsername, req.wpAppPassword)
-        result = await cms.publish(req.title, req.content, req.slug, req.metaDescription)
+
+        # Update existing post หรือ สร้างใหม่
+        if req.cmsPostId:
+            result = await cms.update(req.cmsPostId, req.title, req.content, req.slug, req.metaDescription)
+        else:
+            result = await cms.publish(req.title, req.content, req.slug, req.metaDescription)
+
+        # Set featured image ถ้ามี
+        if req.featuredImageUrl and result.get("cmsPostId"):
+            try:
+                await _set_featured_image_from_url(
+                    req.featuredImageUrl, result["cmsPostId"],
+                    req.wpUrl, req.wpUsername, req.wpAppPassword
+                )
+            except Exception:
+                pass  # ไม่ block publish ถ้า featured image fail
+
         return PublishArticleResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+async def _set_featured_image_from_url(image_url: str, post_id: str, wp_url: str, user: str, pw: str):
+    """Download รูปจาก URL → upload WP Media → set เป็น featured"""
+    import httpx
+    async with httpx.AsyncClient(timeout=30) as client:
+        # Download image
+        img_resp = await client.get(image_url, follow_redirects=True)
+        if img_resp.status_code != 200:
+            return
+
+        # Upload to WP Media
+        filename = image_url.split("/")[-1].split("?")[0] or "featured.jpg"
+        content_type = img_resp.headers.get("content-type", "image/jpeg")
+        media_resp = await client.post(
+            f"{wp_url.rstrip('/')}/wp-json/wp/v2/media",
+            content=img_resp.content,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": content_type,
+            },
+            auth=(user, pw),
+        )
+        if media_resp.status_code not in (200, 201):
+            return
+
+        media_id = media_resp.json().get("id")
+        if not media_id:
+            return
+
+        # Set as featured
+        await client.post(
+            f"{wp_url.rstrip('/')}/wp-json/wp/v2/posts/{post_id}",
+            json={"featured_media": media_id},
+            auth=(user, pw),
+        )
 
 
 @app.post("/fetch-metrics")

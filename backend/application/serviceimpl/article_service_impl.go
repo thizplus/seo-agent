@@ -148,7 +148,9 @@ func (s *articleServiceImpl) Publish(ctx context.Context, id uuid.UUID) (*models
 
 	resp, err := s.aiEngine.PublishArticle(ctx, map[string]any{
 		"title": article.Title, "content": article.Content, "slug": article.Slug,
-		"metaDescription": article.MetaDescription,
+		"metaDescription":  article.MetaDescription,
+		"featuredImageUrl": article.FeaturedImageURL,
+		"cmsPostId":        article.CMSPostID,
 		"wpUrl": site.WPUrl, "wpUsername": site.WPUsername, "wpAppPassword": site.WPAppPassword,
 	})
 	if err != nil {

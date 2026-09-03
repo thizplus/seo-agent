@@ -32,6 +32,8 @@ class PublishArticleRequest(BaseModel):
     content: str
     slug: str
     metaDescription: str = ""
+    featuredImageUrl: str = ""
+    cmsPostId: str = ""
     wpUrl: str
     wpUsername: str
     wpAppPassword: str
