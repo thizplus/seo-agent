@@ -168,24 +168,26 @@ export function ImageInsertDialog({
             )}
 
             {pageImages.length > 0 && (
-              <div className="columns-2 gap-2 space-y-2 max-h-[350px] overflow-auto">
-                {pageImages.map((img, i) => (
-                  <div
-                    key={i}
-                    onClick={() => {
-                      onInsert(`![${img.alt || "image"}](${img.url})`)
-                      handleClose()
-                    }}
-                    className="break-inside-avoid rounded-lg border-2 border-transparent overflow-hidden cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary/30"
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="w-full h-auto"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
+              <div className="max-h-[400px] overflow-y-auto">
+                <div className="columns-2 gap-2 [&>*]:mb-2">
+                  {pageImages.map((img, i) => (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        onInsert(`![${img.alt || "image"}](${img.url})`)
+                        handleClose()
+                      }}
+                      className="break-inside-avoid rounded-lg border-2 border-transparent overflow-hidden cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary/30"
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.alt}
+                        className="w-full h-auto"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
