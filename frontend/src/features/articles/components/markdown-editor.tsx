@@ -111,35 +111,32 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         const ta = textareaRef.current
         if (!ta) return
 
-        // ลอง search หลายวิธี — text อาจถูก strip markdown
+        // Search หลายวิธี — text อาจถูก strip markdown
         const cleanSearch = searchText.replace(/[*#>`_\[\]()]/g, "").trim()
         let idx = value.indexOf(searchText)
         if (idx === -1) idx = value.indexOf(cleanSearch)
-        if (idx === -1) {
-          // ลองหาแค่ 20 ตัวแรก
-          const short = cleanSearch.substring(0, 20)
-          idx = value.indexOf(short)
+        if (idx === -1 && cleanSearch.length > 15) {
+          idx = value.indexOf(cleanSearch.substring(0, 15))
         }
         if (idx === -1) return
 
-        // Select text
-        ta.focus()
+        // 1. Set selection ก่อน
         ta.setSelectionRange(idx, idx + Math.min(searchText.length, 30))
 
-        // Scroll — ใช้ hidden div วัดตำแหน่งจริง
-        const mirror = document.createElement("div")
-        const style = window.getComputedStyle(ta)
-        mirror.style.cssText = `
-          position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;
-          width:${style.width};font:${style.font};padding:${style.padding};
-          line-height:${style.lineHeight};border:${style.border};
-        `
-        mirror.textContent = value.substring(0, idx)
-        document.body.appendChild(mirror)
-        const scrollTarget = mirror.scrollHeight
-        document.body.removeChild(mirror)
+        // 2. ใช้ scrollIntoView trick — สร้าง span ใน hidden textarea clone วัดตำแหน่ง
+        const textBefore = value.substring(0, idx)
+        const linesBefore = textBefore.split("\n").length - 1
+        const computedStyle = window.getComputedStyle(ta)
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 20
+        const paddingTop = parseFloat(computedStyle.paddingTop) || 0
+        const toolbarHeight = 40 // ความสูง toolbar ที่ sticky อยู่ด้านบน
 
-        ta.scrollTop = Math.max(0, scrollTarget - ta.clientHeight / 3)
+        // คำนวณ scroll position จาก line count
+        const targetScroll = paddingTop + (linesBefore * lineHeight) - toolbarHeight - (ta.clientHeight / 3)
+        ta.scrollTop = Math.max(0, targetScroll)
+
+        // 3. Focus หลัง scroll
+        ta.focus()
       },
     }), [value, onChange])
 
