@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
+import {
   SendIcon,
   Loader2Icon,
   ExternalLinkIcon,
@@ -80,6 +87,7 @@ export default function ArticleDetailPage({
   const [pageImages, setPageImages] = useState<{ url: string; alt: string }[]>([])
   const [loadingPageImages, setLoadingPageImages] = useState(false)
   const [settingFeatured, setSettingFeatured] = useState(false)
+  const [imageSheetOpen, setImageSheetOpen] = useState(false)
 
   // Info tab
   const [metrics, setMetrics] = useState<Record<string, any> | null>(null)
@@ -170,7 +178,21 @@ export default function ArticleDetailPage({
   )
 
   // --- Featured image handlers ---
-  const handleLoadPageImages = async () => {
+  const handleOpenImageSheet = async () => {
+    setImageSheetOpen(true)
+    if (pageImages.length > 0) return // ถ้ามีแล้วไม่ต้อง load ใหม่
+    setLoadingPageImages(true)
+    try {
+      const imgs = await articleService.getPageImages(id)
+      setPageImages(imgs || [])
+    } catch {
+      setPageImages([])
+    } finally {
+      setLoadingPageImages(false)
+    }
+  }
+
+  const handleRefreshPageImages = async () => {
     setLoadingPageImages(true)
     try {
       const imgs = await articleService.getPageImages(id)
@@ -187,6 +209,7 @@ export default function ArticleDetailPage({
     try {
       const updated = await articleService.setFeaturedImage(id, imageUrl)
       setFeaturedImage(updated.featuredImageUrl || "")
+      setImageSheetOpen(false)
     } catch {
       // ignore
     } finally {
@@ -425,80 +448,35 @@ export default function ArticleDetailPage({
         )}
 
         {/* Featured Image */}
-        <Card>
-          <CardContent className="pt-4">
-            {featuredImage ? (
-              <div className="relative">
-                <img
-                  src={featuredImage}
-                  alt="Featured"
-                  className="w-full max-h-[300px] object-cover rounded-lg"
-                />
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleLoadPageImages}
-                    disabled={loadingPageImages}
-                  >
-                    {loadingPageImages ? (
-                      <Loader2Icon className="mr-1 size-4 animate-spin" />
-                    ) : (
-                      <RefreshCwIcon className="mr-1 size-4" />
-                    )}
-                    เปลี่ยนรูปหลัก
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2 py-4 text-muted-foreground">
-                <ImageIcon className="size-8" />
-                <p className="text-sm">ยังไม่มีรูปหลัก</p>
-                <Button
-                  size="sm"
-                  onClick={handleLoadPageImages}
-                  disabled={loadingPageImages}
-                >
-                  {loadingPageImages ? (
-                    <Loader2Icon className="mr-1 size-4 animate-spin" />
-                  ) : (
-                    <ImageIcon className="mr-1 size-4" />
-                  )}
-                  ดึงรูปจากหน้าเว็บ
-                </Button>
-              </div>
-            )}
-
-            {/* Page images picker */}
-            {pageImages.length > 0 && (
-              <div className="mt-3">
-                <p className="text-sm text-muted-foreground mb-2">
-                  คลิกเลือกรูปหลัก ({pageImages.length} รูป)
-                </p>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-[250px] overflow-auto">
-                  {pageImages.map((img, i) => (
-                    <div
-                      key={i}
-                      onClick={() => !settingFeatured && handleSetFeatured(img.url)}
-                      className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${
-                        featuredImage === img.url
-                          ? "border-primary ring-2 ring-primary/30"
-                          : "border-transparent hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      <img
-                        src={img.url}
-                        alt={img.alt}
-                        className="w-full aspect-video object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {featuredImage ? (
+          <div className="relative rounded-lg overflow-hidden border">
+            <img
+              src={featuredImage}
+              alt="Featured"
+              className="w-full max-h-[250px] object-cover"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute bottom-2 right-2 opacity-80 hover:opacity-100"
+              onClick={handleOpenImageSheet}
+            >
+              <RefreshCwIcon className="mr-1 size-3.5" />
+              เปลี่ยนรูปหลัก
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-lg border border-dashed p-4">
+            <ImageIcon className="size-6 text-muted-foreground" />
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">ยังไม่มีรูปหลัก</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={handleOpenImageSheet}>
+              <ImageIcon className="mr-1 size-3.5" />
+              เลือกรูปหลัก
+            </Button>
+          </div>
+        )}
 
         {/* Main Tabs */}
         <Tabs defaultValue="editor">
@@ -919,6 +897,75 @@ export default function ArticleDetailPage({
         onOpenChange={setVideoDialogOpen}
         onInsert={handleInsertMarkdown}
       />
+
+      {/* Featured Image Sheet */}
+      <Sheet open={imageSheetOpen} onOpenChange={setImageSheetOpen}>
+        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>เลือกรูปหลัก</SheetTitle>
+            <SheetDescription>
+              คลิกรูปที่ต้องการใช้เป็นรูปหลักของบทความ
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="px-4 pb-4">
+            <Button
+              size="sm"
+              variant="outline"
+              className="mb-3 w-full"
+              onClick={handleRefreshPageImages}
+              disabled={loadingPageImages}
+            >
+              {loadingPageImages ? (
+                <Loader2Icon className="mr-1 size-4 animate-spin" />
+              ) : (
+                <RefreshCwIcon className="mr-1 size-4" />
+              )}
+              {loadingPageImages ? "กำลังโหลด..." : "โหลดรูปใหม่"}
+            </Button>
+
+            {loadingPageImages && pageImages.length === 0 && (
+              <div className="flex justify-center py-8">
+                <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!loadingPageImages && pageImages.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                ไม่พบรูปในหน้าเว็บ
+              </p>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              {pageImages.map((img, i) => (
+                <div
+                  key={i}
+                  onClick={() => !settingFeatured && handleSetFeatured(img.url)}
+                  className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-all ${
+                    featuredImage === img.url
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-transparent hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <img
+                    src={img.url}
+                    alt={img.alt}
+                    className="w-full aspect-video object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {settingFeatured && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2Icon className="size-3.5 animate-spin" />
+                กำลังบันทึก...
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   )
 }
