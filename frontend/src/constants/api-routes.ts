@@ -64,6 +64,8 @@ export const API_ROUTES = {
     FIND_IMAGES: (id: string) => `${API_BASE}/api/v1/articles/${id}/find-images`,
     GENERATE_IMAGES: (id: string) => `${API_BASE}/api/v1/articles/${id}/generate-images`,
     UPLOAD_FILE: `${API_BASE}/api/v1/articles/upload-file`,
+    REVIEW: (id: string) => `${API_BASE}/api/v1/articles/${id}/review`,
+    REWRITE: (id: string) => `${API_BASE}/api/v1/articles/${id}/rewrite`,
     PAGE_IMAGES: (id: string) => `${API_BASE}/api/v1/articles/${id}/page-images`,
     FEATURED_IMAGE: (id: string) => `${API_BASE}/api/v1/articles/${id}/featured-image`,
     UPDATE_CONTENT: (id: string) => `${API_BASE}/api/v1/articles/${id}/content`,

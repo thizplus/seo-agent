@@ -181,6 +181,25 @@ class AutoPipelineRequest(BaseModel):
     llm_api_key: str = ""
 
 
+class ReviewArticleRequest(BaseModel):
+    content: str
+    title: str = ""
+    custom_rules: str = ""
+    target_tone: str = "สนทนาเป็นกันเอง"
+    llm_provider: str = "gemini"
+    llm_api_key: str = ""
+
+
+class RewriteArticleRequest(BaseModel):
+    content: str
+    title: str = ""
+    issues: list[dict] = []
+    custom_rules: str = ""
+    target_tone: str = "สนทนาเป็นกันเอง"
+    llm_provider: str = "gemini"
+    llm_api_key: str = ""
+
+
 class ScrapePageImagesRequest(BaseModel):
     page_url: str
 

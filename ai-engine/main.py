@@ -23,6 +23,8 @@ from models.schemas import (
     DeleteMediaRequest,
     DeleteWPPostRequest,
     AutoPipelineRequest,
+    ReviewArticleRequest,
+    RewriteArticleRequest,
     ScrapePageImagesRequest,
     HealthResponse,
 )
@@ -415,6 +417,115 @@ async def auto_pipeline(req: AutoPipelineRequest):
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/review-article")
+async def review_article(req: ReviewArticleRequest):
+    """ตรวจสอบบทความ — หาปัญหาภาษา, ความถูกต้อง, คำซ้ำ"""
+    if not req.llm_api_key:
+        raise HTTPException(status_code=400, detail="LLM API key is required")
+    try:
+        llm = container.create_llm(req.llm_provider, req.llm_api_key)
+
+        prompt = f"""วิเคราะห์บทความนี้และหาปัญหา ตอบเป็น JSON เท่านั้น
+
+## บทความ
+หัวข้อ: {req.title}
+เนื้อหา:
+{req.content[:8000]}
+
+## สิ่งที่ต้องตรวจ
+1. **formal_language** — ประโยคที่ใช้ภาษาทางการ/ราชการเกินไป ควรเปลี่ยนเป็นภาษา{req.target_tone}
+2. **wrong_translation** — คำอังกฤษที่มีคำแปลไทยใน () ที่ความหมายไม่ตรงกัน
+3. **irrelevant_content** — ประโยค/ย่อหน้าที่ไม่เกี่ยวกับหัวข้อ หรือข้อมูลที่ไม่ถูกต้อง/เป็นเท็จ
+4. **keyword_stuffing** — คำ/วลีที่ซ้ำมากเกินไป (เกิน 7 ครั้ง)
+{f"5. **custom_rules** — {req.custom_rules}" if req.custom_rules else ""}
+
+## Output (JSON)
+{{
+  "issues": [
+    {{
+      "type": "formal_language|wrong_translation|irrelevant_content|keyword_stuffing|custom_rules",
+      "severity": "critical|warning|info",
+      "original": "ข้อความต้นฉบับที่มีปัญหา",
+      "suggestion": "ข้อเสนอแนะการแก้ไข",
+      "reason": "เหตุผลสั้นๆ"
+    }}
+  ],
+  "summary": {{
+    "total": 0,
+    "critical": 0,
+    "warning": 0,
+    "info": 0
+  }}
+}}"""
+
+        response = await llm.generate(prompt, temperature=0.3)
+
+        # Parse JSON
+        import json as json_mod
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1]
+            if cleaned.rstrip().endswith("```"):
+                cleaned = cleaned.rstrip()[:-3]
+        data = json_mod.loads(cleaned.strip())
+
+        return {"success": True, "data": data}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/rewrite-article")
+async def rewrite_article(req: RewriteArticleRequest):
+    """Rewrite บทความตามปัญหาที่พบ"""
+    if not req.llm_api_key:
+        raise HTTPException(status_code=400, detail="LLM API key is required")
+    try:
+        llm = container.create_llm(req.llm_provider, req.llm_api_key)
+
+        issues_text = ""
+        for i, issue in enumerate(req.issues, 1):
+            issues_text += f"{i}. [{issue.get('type','')}] \"{issue.get('original','')}\" → {issue.get('suggestion','')}\n"
+
+        prompt = f"""แก้ไขบทความนี้ตามปัญหาที่ระบุ
+
+## บทความเดิม
+{req.content}
+
+## ปัญหาที่ต้องแก้
+{issues_text}
+
+## กฎการแก้ไข
+- รักษาโครงสร้าง Markdown heading (#, ##, ###) เดิมทั้งหมด
+- รักษา keyword SEO แต่ลดคำซ้ำให้เป็นธรรมชาติ
+- เปลี่ยนภาษาทางการเป็นโทน: {req.target_tone}
+- ลบเนื้อหาที่ไม่เกี่ยวข้อง/ไม่ถูกต้องออก
+- แก้คำอังกฤษ-ไทยให้ตรงกัน
+- ห้ามเพิ่มเนื้อหาใหม่ที่ไม่เกี่ยวข้อง
+- ห้ามเปลี่ยน heading text (ยกเว้นมีปัญหา)
+{f"- {req.custom_rules}" if req.custom_rules else ""}
+
+ตอบเป็น Markdown เต็มบทความ ไม่ต้องครอบด้วย ```"""
+
+        content = await llm.generate(prompt, temperature=0.4)
+
+        # ลบ ``` wrapper ถ้ามี
+        cleaned = content.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1]
+            if cleaned.rstrip().endswith("```"):
+                cleaned = cleaned.rstrip()[:-3]
+
+        return {
+            "success": True,
+            "data": {
+                "content": cleaned.strip(),
+                "word_count": len(cleaned.split()),
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/scrape-page-images")

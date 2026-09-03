@@ -11,6 +11,7 @@ import {
   MarkdownPreview,
   ImageInsertDialog,
   VideoInsertDialog,
+  ReviewDialog,
 } from "@/features/articles"
 import type { MarkdownEditorRef } from "@/features/articles"
 import { NAV_ROUTES } from "@/constants/nav"
@@ -51,6 +52,7 @@ import {
   SplitIcon,
   PenLineIcon,
   RefreshCwIcon,
+  SparklesIcon,
 } from "lucide-react"
 
 export default function ArticleDetailPage({
@@ -75,6 +77,7 @@ export default function ArticleDetailPage({
   const editorRef = useRef<MarkdownEditorRef>(null)
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
 
   // Images tab
   const [searchingImages, setSearchingImages] = useState(false)
@@ -883,6 +886,20 @@ export default function ArticleDetailPage({
         onOpenChange={setVideoDialogOpen}
         onInsert={handleInsertMarkdown}
       />
+      <ReviewDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        onReview={async (customRules, targetTone) =>
+          articleService.reviewArticle(id, { customRules, targetTone })
+        }
+        onRewrite={async (issues, customRules, targetTone) =>
+          articleService.rewriteArticle(id, { issues, customRules, targetTone })
+        }
+        onApply={(newContent) => {
+          setContent(newContent)
+          setIsDirty(true)
+        }}
+      />
 
       {/* Fixed Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background px-4 py-2 flex items-center gap-2">
@@ -893,6 +910,14 @@ export default function ArticleDetailPage({
         >
           <Trash2Icon className="mr-1 size-3.5" />
           ลบ
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setReviewDialogOpen(true)}
+        >
+          <SparklesIcon className="mr-1 size-3.5" />
+          ตรวจสอบ
         </Button>
         <div className="flex-1" />
         <Button

@@ -68,6 +68,22 @@ export const articleService = {
     return res.data.data
   },
 
+  async reviewArticle(
+    id: string,
+    data: { customRules?: string; targetTone?: string }
+  ): Promise<any> {
+    const res = await apiClient.post(API_ROUTES.ARTICLES.REVIEW(id), data)
+    return res.data.data
+  },
+
+  async rewriteArticle(
+    id: string,
+    data: { issues: any[]; customRules?: string; targetTone?: string }
+  ): Promise<{ content: string; word_count: number }> {
+    const res = await apiClient.post(API_ROUTES.ARTICLES.REWRITE(id), data)
+    return res.data.data
+  },
+
   async getPageImages(id: string): Promise<{ url: string; alt: string }[]> {
     const res = await apiClient.get<{ data: { url: string; alt: string }[] }>(
       API_ROUTES.ARTICLES.PAGE_IMAGES(id)

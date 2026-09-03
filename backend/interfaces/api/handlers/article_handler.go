@@ -7,7 +7,9 @@ import (
 	"github.com/google/uuid"
 
 	"seo-agents-backend/domain/dto"
+	"seo-agents-backend/domain/models"
 	"seo-agents-backend/domain/ports"
+	"seo-agents-backend/domain/repositories"
 	"seo-agents-backend/domain/services"
 	"seo-agents-backend/pkg/utils"
 )
@@ -15,10 +17,19 @@ import (
 type ArticleHandler struct {
 	articleService services.ArticleService
 	aiEngine       ports.AIEnginePort
+	siteRepo       repositories.SiteRepository
 }
 
-func NewArticleHandler(articleService services.ArticleService, aiEngine ports.AIEnginePort) *ArticleHandler {
-	return &ArticleHandler{articleService: articleService, aiEngine: aiEngine}
+func NewArticleHandler(articleService services.ArticleService, aiEngine ports.AIEnginePort, siteRepo repositories.SiteRepository) *ArticleHandler {
+	return &ArticleHandler{articleService: articleService, aiEngine: aiEngine, siteRepo: siteRepo}
+}
+
+func (h *ArticleHandler) getSiteForArticle(c *fiber.Ctx, articleID uuid.UUID) (*models.Site, error) {
+	article, err := h.articleService.GetByID(c.UserContext(), articleID)
+	if err != nil {
+		return nil, err
+	}
+	return h.siteRepo.GetByID(c.UserContext(), article.SiteID)
 }
 
 func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
@@ -37,6 +48,80 @@ func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
 	}
 
 	return utils.CreatedResponse(c, dto.ArticleToResponse(article))
+}
+
+func (h *ArticleHandler) ReviewArticle(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+	article, err := h.articleService.GetByID(c.UserContext(), id)
+	if err != nil {
+		return utils.NotFoundResponse(c, "Article not found")
+	}
+
+	var body struct {
+		CustomRules string `json:"customRules"`
+		TargetTone  string `json:"targetTone"`
+	}
+	c.BodyParser(&body)
+
+	site, err := h.getSiteForArticle(c, id)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	result, err := h.aiEngine.ReviewArticle(c.UserContext(), map[string]any{
+		"content":      article.Content,
+		"title":        article.Title,
+		"custom_rules": body.CustomRules,
+		"target_tone":  body.TargetTone,
+		"llm_provider": site.LLMProvider,
+		"llm_api_key":  site.LLMApiKey,
+	})
+	if err != nil {
+		slog.Error("Review article failed", "error", err)
+		return utils.BadRequestResponse(c, err.Error())
+	}
+	return utils.SuccessResponse(c, result["data"])
+}
+
+func (h *ArticleHandler) RewriteArticle(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+	article, err := h.articleService.GetByID(c.UserContext(), id)
+	if err != nil {
+		return utils.NotFoundResponse(c, "Article not found")
+	}
+
+	var body struct {
+		Issues     []map[string]any `json:"issues"`
+		CustomRules string          `json:"customRules"`
+		TargetTone  string          `json:"targetTone"`
+	}
+	c.BodyParser(&body)
+
+	siteModel, err := h.getSiteForArticle(c, id)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	result, err := h.aiEngine.RewriteArticle(c.UserContext(), map[string]any{
+		"content":      article.Content,
+		"title":        article.Title,
+		"issues":       body.Issues,
+		"custom_rules": body.CustomRules,
+		"target_tone":  body.TargetTone,
+		"llm_provider": siteModel.LLMProvider,
+		"llm_api_key":  siteModel.LLMApiKey,
+	})
+	if err != nil {
+		slog.Error("Rewrite article failed", "error", err)
+		return utils.BadRequestResponse(c, err.Error())
+	}
+	return utils.SuccessResponse(c, result["data"])
 }
 
 func (h *ArticleHandler) ScrapePageImages(c *fiber.Ctx) error {

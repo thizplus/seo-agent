@@ -116,6 +116,14 @@ func (c *HTTPClient) AnalyzePage(ctx context.Context, req map[string]any) (map[s
 	return c.call(ctx, "/analyze-page", req)
 }
 
+func (c *HTTPClient) ReviewArticle(ctx context.Context, req map[string]any) (map[string]any, error) {
+	return c.call(ctx, "/review-article", req)
+}
+
+func (c *HTTPClient) RewriteArticle(ctx context.Context, req map[string]any) (map[string]any, error) {
+	return c.call(ctx, "/rewrite-article", req)
+}
+
 func (c *HTTPClient) ScrapePageImages(ctx context.Context, pageURL string) (map[string]any, error) {
 	return c.call(ctx, "/scrape-page-images", map[string]string{"page_url": pageURL})
 }
