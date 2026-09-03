@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -117,9 +117,12 @@ export function ImageInsertDialog({
     }
   }
 
-  const handlePageTabClick = () => {
-    if (!pageLoaded) handleLoadPageImages()
-  }
+  // Auto-load page images เมื่อ dialog เปิด
+  useEffect(() => {
+    if (open && !pageLoaded && onScrapePageImages) {
+      handleLoadPageImages()
+    }
+  }, [open])
 
   const handleClose = () => {
     setSearchKeyword("")
@@ -144,7 +147,7 @@ export function ImageInsertDialog({
 
         <Tabs defaultValue="page">
           <TabsList>
-            <TabsTrigger value="page" onClick={handlePageTabClick}>รูปจากเว็บ</TabsTrigger>
+            <TabsTrigger value="page">รูปจากเว็บ</TabsTrigger>
             <TabsTrigger value="upload">อัปโหลด</TabsTrigger>
             <TabsTrigger value="search">ค้นหารูปฟรี</TabsTrigger>
             <TabsTrigger value="url">ใส่ URL</TabsTrigger>
