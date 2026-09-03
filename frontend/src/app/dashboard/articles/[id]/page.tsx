@@ -539,7 +539,7 @@ export default function ArticleDetailPage({
                   <div className="rounded-md border min-h-[500px]">
                     <MarkdownPreview
                       content={content}
-                      onHeadingClick={(text) => editorRef.current?.scrollToText(text)}
+                      onTextClick={(text) => editorRef.current?.scrollToText(text)}
                     />
                   </div>
                 )}

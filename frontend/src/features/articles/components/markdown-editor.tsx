@@ -110,14 +110,36 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       scrollToText(searchText: string) {
         const ta = textareaRef.current
         if (!ta) return
-        const idx = value.indexOf(searchText)
+
+        // ลอง search หลายวิธี — text อาจถูก strip markdown
+        const cleanSearch = searchText.replace(/[*#>`_\[\]()]/g, "").trim()
+        let idx = value.indexOf(searchText)
+        if (idx === -1) idx = value.indexOf(cleanSearch)
+        if (idx === -1) {
+          // ลองหาแค่ 20 ตัวแรก
+          const short = cleanSearch.substring(0, 20)
+          idx = value.indexOf(short)
+        }
         if (idx === -1) return
+
+        // Select text
         ta.focus()
-        ta.setSelectionRange(idx, idx + searchText.length)
-        // scroll textarea ไปยังตำแหน่งนั้น
-        const linesBefore = value.substring(0, idx).split("\n").length
-        const lineHeight = 20
-        ta.scrollTop = Math.max(0, (linesBefore - 3) * lineHeight)
+        ta.setSelectionRange(idx, idx + Math.min(searchText.length, 30))
+
+        // Scroll — ใช้ hidden div วัดตำแหน่งจริง
+        const mirror = document.createElement("div")
+        const style = window.getComputedStyle(ta)
+        mirror.style.cssText = `
+          position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;
+          width:${style.width};font:${style.font};padding:${style.padding};
+          line-height:${style.lineHeight};border:${style.border};
+        `
+        mirror.textContent = value.substring(0, idx)
+        document.body.appendChild(mirror)
+        const scrollTarget = mirror.scrollHeight
+        document.body.removeChild(mirror)
+
+        ta.scrollTop = Math.max(0, scrollTarget - ta.clientHeight / 3)
       },
     }), [value, onChange])
 
