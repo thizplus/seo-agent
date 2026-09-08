@@ -26,6 +26,7 @@ interface MarkdownEditorProps {
   onChange: (value: string) => void
   onImageClick?: () => void
   onVideoClick?: () => void
+  onGalleryClick?: () => void
 }
 
 export interface MarkdownEditorRef {
@@ -115,24 +116,6 @@ function toggleAlignment(
   requestAnimationFrame(() => { textarea.focus() })
 }
 
-function insertGallery(
-  textarea: HTMLTextAreaElement,
-  onChange: (value: string) => void
-) {
-  const { selectionStart, value } = textarea
-  const template = "\n{{gallery}}\n![รูป 1](url1)\n![รูป 2](url2)\n{{/gallery}}\n"
-  const newText = value.substring(0, selectionStart) + template + value.substring(selectionStart)
-  onChange(newText)
-
-  requestAnimationFrame(() => {
-    // Select "url1" เพื่อให้ user แทนที่ได้เลย
-    const url1Pos = selectionStart + template.indexOf("url1")
-    textarea.selectionStart = url1Pos
-    textarea.selectionEnd = url1Pos + 4
-    textarea.focus()
-  })
-}
-
 const TOOLBAR_ITEMS = [
   { icon: BoldIcon, label: "Bold", action: "wrap", before: "**", after: "**" },
   { icon: ItalicIcon, label: "Italic", action: "wrap", before: "*", after: "*" },
@@ -156,7 +139,7 @@ const TOOLBAR_ITEMS = [
 ] as const
 
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
-  function MarkdownEditor({ value, onChange, onImageClick, onVideoClick }, ref) {
+  function MarkdownEditor({ value, onChange, onImageClick, onVideoClick, onGalleryClick }, ref) {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const cursorPosRef = useRef<number>(value.length)
 
@@ -240,7 +223,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
               break
             case "gallery":
               trackCursor()
-              insertGallery(ta, onChange)
+              onGalleryClick?.()
               break
           }
         }

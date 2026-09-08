@@ -12,6 +12,7 @@ import {
   ImageInsertDialog,
   VideoInsertDialog,
   ReviewDialog,
+  GalleryInsertDialog,
 } from "@/features/articles"
 import type { MarkdownEditorRef } from "@/features/articles"
 import { NAV_ROUTES } from "@/constants/nav"
@@ -77,6 +78,7 @@ export default function ArticleDetailPage({
   const editorRef = useRef<MarkdownEditorRef>(null)
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
+  const [galleryDialogOpen, setGalleryDialogOpen] = useState(false)
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
 
   // Images tab
@@ -553,6 +555,7 @@ export default function ArticleDetailPage({
                     onChange={handleContentChange}
                     onImageClick={() => setImageDialogOpen(true)}
                     onVideoClick={() => setVideoDialogOpen(true)}
+                    onGalleryClick={() => setGalleryDialogOpen(true)}
                   />
                 )}
                 {viewMode !== "editor" && (
@@ -885,6 +888,13 @@ export default function ArticleDetailPage({
         open={videoDialogOpen}
         onOpenChange={setVideoDialogOpen}
         onInsert={handleInsertMarkdown}
+      />
+      <GalleryInsertDialog
+        open={galleryDialogOpen}
+        onOpenChange={setGalleryDialogOpen}
+        onInsert={handleInsertMarkdown}
+        onUpload={handleImageUpload}
+        onScrapePageImages={handleScrapePageImages}
       />
       <ReviewDialog
         open={reviewDialogOpen}
