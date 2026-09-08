@@ -25,10 +25,45 @@ function preprocessContent(content: string): string {
     "{{youtube:$1}}"
   )
 
-  return content.replace(
+  content = content.replace(
     /\{\{youtube:([a-zA-Z0-9_-]+)\}\}/g,
     '<div class="aspect-video my-4"><iframe src="https://www.youtube.com/embed/$1" class="w-full h-full rounded-lg" frameborder="0" allowfullscreen></iframe></div>'
   )
+
+  // Image alignment: ![alt](url){center|left|right}
+  content = content.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)\{(center|left|right)\}/g,
+    (_, alt, url, align) => {
+      const style = align === "center"
+        ? "text-align:center"
+        : `float:${align};margin:0 ${align === "left" ? "1em 1em 0" : "0 0 1em 1em"}`
+      return `<figure style="${style};margin-top:0.5em;margin-bottom:0.5em"><img src="${url}" alt="${alt}" style="max-width:100%;border-radius:8px" /></figure>`
+    }
+  )
+
+  // Gallery: {{gallery}} ... {{/gallery}}
+  content = content.replace(
+    /\{\{gallery\}\}\n([\s\S]*?)\n\{\{\/gallery\}\}/g,
+    (_, inner) => {
+      const images = [...inner.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)]
+      if (images.length === 0) return ""
+      const imgTags = images
+        .map(
+          (m: RegExpMatchArray) =>
+            `<div style="flex:1;min-width:0"><img src="${m[2]}" alt="${m[1]}" style="width:100%;border-radius:8px;object-fit:cover" /></div>`
+        )
+        .join("")
+      return `<div style="display:flex;gap:8px;margin:1em 0">${imgTags}</div>`
+    }
+  )
+
+  // Text alignment: {center}text{/center} or {right}text{/right}
+  content = content.replace(
+    /\{(center|right)\}(.+?)\{\/\1\}/g,
+    '<p style="text-align:$1">$2</p>'
+  )
+
+  return content
 }
 
 export function MarkdownPreview({ content, onTextClick }: MarkdownPreviewProps) {

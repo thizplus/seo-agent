@@ -15,6 +15,9 @@ import {
   QuoteIcon,
   ListIcon,
   ListOrderedIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  ColumnsIcon,
 } from "lucide-react"
 
 interface MarkdownEditorProps {
@@ -70,6 +73,65 @@ function insertLineStart(
   })
 }
 
+function toggleAlignment(
+  textarea: HTMLTextAreaElement,
+  align: "center" | "right",
+  onChange: (value: string) => void
+) {
+  const { selectionStart, selectionEnd, value } = textarea
+  const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1
+  const lineEnd = value.indexOf("\n", selectionEnd)
+  const line = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd)
+
+  // ถ้า line เป็นรูป ![alt](url) → toggle {center}/{right}
+  const imgMatch = line.match(/^(!\[[^\]]*\]\([^)]+\))(\{(center|left|right)\})?$/)
+  if (imgMatch) {
+    const currentAlign = imgMatch[3]
+    const newLine = currentAlign === align
+      ? imgMatch[1]  // ลบ alignment ออก (toggle off)
+      : `${imgMatch[1]}{${align}}`
+    const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd === -1 ? value.length : lineEnd)
+    onChange(newText)
+    requestAnimationFrame(() => { textarea.focus() })
+    return
+  }
+
+  // ถ้าเป็น text ปกติ → toggle {center}...{/center}
+  const alignMatch = line.match(/^\{(center|right)\}(.+)\{\/\1\}$/)
+  if (alignMatch) {
+    // ลบ alignment ออก (toggle off) หรือเปลี่ยน alignment
+    const newLine = alignMatch[1] === align
+      ? alignMatch[2]
+      : `{${align}}${alignMatch[2]}{/${align}}`
+    const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd === -1 ? value.length : lineEnd)
+    onChange(newText)
+  } else if (line.trim()) {
+    // เพิ่ม alignment
+    const newLine = `{${align}}${line}{/${align}}`
+    const newText = value.substring(0, lineStart) + newLine + value.substring(lineEnd === -1 ? value.length : lineEnd)
+    onChange(newText)
+  }
+  requestAnimationFrame(() => { textarea.focus() })
+}
+
+function insertGallery(
+  textarea: HTMLTextAreaElement,
+  onChange: (value: string) => void
+) {
+  const { selectionStart, value } = textarea
+  const template = "\n{{gallery}}\n![รูป 1](url1)\n![รูป 2](url2)\n{{/gallery}}\n"
+  const newText = value.substring(0, selectionStart) + template + value.substring(selectionStart)
+  onChange(newText)
+
+  requestAnimationFrame(() => {
+    // Select "url1" เพื่อให้ user แทนที่ได้เลย
+    const url1Pos = selectionStart + template.indexOf("url1")
+    textarea.selectionStart = url1Pos
+    textarea.selectionEnd = url1Pos + 4
+    textarea.focus()
+  })
+}
+
 const TOOLBAR_ITEMS = [
   { icon: BoldIcon, label: "Bold", action: "wrap", before: "**", after: "**" },
   { icon: ItalicIcon, label: "Italic", action: "wrap", before: "*", after: "*" },
@@ -80,6 +142,10 @@ const TOOLBAR_ITEMS = [
   { icon: LinkIcon, label: "Link", action: "wrap", before: "[", after: "](url)" },
   { icon: ImageIcon, label: "Image", action: "image" },
   { icon: VideoIcon, label: "Video", action: "video" },
+  { type: "separator" as const },
+  { icon: AlignCenterIcon, label: "จัดกลาง", action: "align-center" },
+  { icon: AlignRightIcon, label: "ชิดขวา", action: "align-right" },
+  { icon: ColumnsIcon, label: "Gallery 2 คอลัมน์", action: "gallery" },
   { type: "separator" as const },
   { icon: MinusIcon, label: "HR", action: "line", prefix: "\n---\n" },
   { icon: QuoteIcon, label: "Quote", action: "line", prefix: "> " },
@@ -160,6 +226,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             case "video":
               trackCursor()
               onVideoClick?.()
+              break
+            case "align-center":
+              toggleAlignment(ta, "center", onChange)
+              break
+            case "align-right":
+              toggleAlignment(ta, "right", onChange)
+              break
+            case "gallery":
+              trackCursor()
+              insertGallery(ta, onChange)
               break
           }
         }

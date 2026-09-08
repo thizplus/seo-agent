@@ -52,6 +52,27 @@ class GutenbergFormatter:
                     i += 1
                     continue
 
+            # Gallery block: {{gallery}} ... {{/gallery}}
+            if line == "{{gallery}}":
+                gallery_images = []
+                i += 1
+                while i < len(lines) and lines[i].strip() != "{{/gallery}}":
+                    img_m = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", lines[i].strip())
+                    if img_m:
+                        gallery_images.append({"alt": img_m.group(1), "url": img_m.group(2)})
+                    i += 1
+                i += 1  # skip {{/gallery}}
+                if gallery_images:
+                    blocks.append(self._make_gallery(gallery_images))
+                continue
+
+            # Text alignment: {center}...{/center} or {right}...{/right}
+            align_match = re.match(r"^\{(center|right)\}(.+)\{/\1\}$", line)
+            if align_match:
+                blocks.append(self._make_paragraph(align_match.group(2), align=align_match.group(1)))
+                i += 1
+                continue
+
             # Unordered list
             if line.startswith("- ") or line.startswith("* "):
                 list_lines = []
@@ -106,10 +127,11 @@ class GutenbergFormatter:
                 i += 1
                 continue
 
-            # Image (already in markdown)
-            img_match = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", line)
-            if img_match:
-                blocks.append(self._make_image(img_match.group(2), img_match.group(1)))
+            # Image with optional alignment: ![alt](url){center}
+            img_match = re.match(r"!\[([^\]]*)\]\(([^)]+)\)(?:\{(center|left|right)\})?", line)
+            if img_match and line.startswith("!["):
+                align = img_match.group(3)  # None if no alignment
+                blocks.append(self._make_image(img_match.group(2), img_match.group(1), align=align))
                 i += 1
                 continue
 
@@ -141,6 +163,10 @@ class GutenbergFormatter:
             return True
         if line.startswith("{{__YT_EMBED__:"):
             return True
+        if line == "{{gallery}}" or line == "{{/gallery}}":
+            return True
+        if re.match(r"^\{(center|right)\}.+\{/(center|right)\}$", line):
+            return True
         return False
 
     def _parse_heading(self, line: str) -> str:
@@ -157,8 +183,10 @@ class GutenbergFormatter:
         else:
             return f'<!-- wp:heading {{"level":{level}}} -->\n<h{level}>{text}</h{level}>\n<!-- /wp:heading -->'
 
-    def _make_paragraph(self, text: str) -> str:
+    def _make_paragraph(self, text: str, align: str = None) -> str:
         text = self._inline_format(text)
+        if align:
+            return f'<!-- wp:paragraph {{"align":"{align}"}} -->\n<p class="has-text-align-{align}">{text}</p>\n<!-- /wp:paragraph -->'
         return f'<!-- wp:paragraph -->\n<p>{text}</p>\n<!-- /wp:paragraph -->'
 
     def _make_list(self, items: list[str], ordered: bool = False) -> str:
@@ -174,8 +202,34 @@ class GutenbergFormatter:
     def _make_code(self, code: str) -> str:
         return f'<!-- wp:code -->\n<pre class="wp-block-code"><code>{code}</code></pre>\n<!-- /wp:code -->'
 
-    def _make_image(self, url: str, alt: str) -> str:
+    def _make_image(self, url: str, alt: str, align: str = None) -> str:
+        if align:
+            return (
+                f'<!-- wp:image {{"align":"{align}","sizeSlug":"large"}} -->\n'
+                f'<figure class="wp-block-image align{align} size-large">'
+                f'<img src="{url}" alt="{alt}" /></figure>\n'
+                f'<!-- /wp:image -->'
+            )
         return f'<!-- wp:image -->\n<figure class="wp-block-image size-large"><img src="{url}" alt="{alt}" /></figure>\n<!-- /wp:image -->'
+
+    def _make_gallery(self, images: list[dict]) -> str:
+        cols = len(images)
+        inner = []
+        for img in images:
+            inner.append(
+                f'<!-- wp:image -->\n'
+                f'<figure class="wp-block-image size-large">'
+                f'<img src="{img["url"]}" alt="{img["alt"]}" /></figure>\n'
+                f'<!-- /wp:image -->'
+            )
+        inner_html = "\n".join(inner)
+        return (
+            f'<!-- wp:gallery {{"columns":{cols},"linkTo":"none"}} -->\n'
+            f'<figure class="wp-block-gallery has-nested-images columns-{cols} is-cropped">\n'
+            f'{inner_html}\n'
+            f'</figure>\n'
+            f'<!-- /wp:gallery -->'
+        )
 
     def _make_youtube(self, video_id: str) -> str:
         return (

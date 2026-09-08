@@ -109,8 +109,9 @@ async def publish_article(req: PublishArticleRequest):
                     req.featuredImageUrl, result["cmsPostId"],
                     req.wpUrl, req.wpUsername, req.wpAppPassword
                 )
-            except Exception:
-                pass  # ไม่ block publish ถ้า featured image fail
+            except Exception as e:
+                import logging
+                logging.getLogger("featured_image").error(f"[Featured] Exception: {e}", exc_info=True)
 
         return PublishArticleResponse(**result)
     except Exception as e:
@@ -120,15 +121,29 @@ async def publish_article(req: PublishArticleRequest):
 async def _set_featured_image_from_url(image_url: str, post_id: str, wp_url: str, user: str, pw: str):
     """Download รูปจาก URL → upload WP Media → set เป็น featured"""
     import httpx
-    async with httpx.AsyncClient(timeout=30) as client:
+    import logging
+    logger = logging.getLogger("featured_image")
+
+    logger.info(f"[Featured] Starting: post_id={post_id}, image_url={image_url[:100]}")
+
+    async with httpx.AsyncClient(timeout=60) as client:
         # Download image
         img_resp = await client.get(image_url, follow_redirects=True)
         if img_resp.status_code != 200:
+            logger.error(f"[Featured] Download failed: status={img_resp.status_code}, url={image_url[:100]}")
             return
+
+        content_type = img_resp.headers.get("content-type", "image/jpeg")
+        logger.info(f"[Featured] Downloaded: size={len(img_resp.content)} bytes, content_type={content_type}")
 
         # Upload to WP Media
         filename = image_url.split("/")[-1].split("?")[0] or "featured.jpg"
-        content_type = img_resp.headers.get("content-type", "image/jpeg")
+        # Sanitize filename — WP อาจ reject ชื่อไฟล์แปลกๆ
+        import re
+        filename = re.sub(r'[^a-zA-Z0-9._-]', '-', filename)
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.gif')):
+            filename += ".webp"
+
         media_resp = await client.post(
             f"{wp_url.rstrip('/')}/wp-json/wp/v2/media",
             content=img_resp.content,
@@ -139,18 +154,27 @@ async def _set_featured_image_from_url(image_url: str, post_id: str, wp_url: str
             auth=(user, pw),
         )
         if media_resp.status_code not in (200, 201):
+            logger.error(f"[Featured] WP Media upload failed: status={media_resp.status_code}, body={media_resp.text[:300]}")
             return
 
         media_id = media_resp.json().get("id")
         if not media_id:
+            logger.error(f"[Featured] WP Media response has no id: {media_resp.text[:300]}")
             return
 
+        logger.info(f"[Featured] Uploaded to WP Media: media_id={media_id}, filename={filename}")
+
         # Set as featured
-        await client.post(
+        set_resp = await client.post(
             f"{wp_url.rstrip('/')}/wp-json/wp/v2/posts/{post_id}",
             json={"featured_media": media_id},
             auth=(user, pw),
         )
+        if set_resp.status_code != 200:
+            logger.error(f"[Featured] Set featured_media failed: status={set_resp.status_code}, body={set_resp.text[:300]}")
+            return
+
+        logger.info(f"[Featured] Success! post_id={post_id}, media_id={media_id}")
 
 
 @app.post("/fetch-metrics")
