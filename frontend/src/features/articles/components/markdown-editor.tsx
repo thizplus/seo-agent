@@ -15,6 +15,7 @@ import {
   QuoteIcon,
   ListIcon,
   ListOrderedIcon,
+  AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
   ColumnsIcon,
@@ -75,7 +76,7 @@ function insertLineStart(
 
 function toggleAlignment(
   textarea: HTMLTextAreaElement,
-  align: "center" | "right",
+  align: "left" | "center" | "right",
   onChange: (value: string) => void
 ) {
   const { selectionStart, selectionEnd, value } = textarea
@@ -97,7 +98,7 @@ function toggleAlignment(
   }
 
   // ถ้าเป็น text ปกติ → toggle {center}...{/center}
-  const alignMatch = line.match(/^\{(center|right)\}(.+)\{\/\1\}$/)
+  const alignMatch = line.match(/^\{(left|center|right)\}(.+)\{\/\1\}$/)
   if (alignMatch) {
     // ลบ alignment ออก (toggle off) หรือเปลี่ยน alignment
     const newLine = alignMatch[1] === align
@@ -143,6 +144,7 @@ const TOOLBAR_ITEMS = [
   { icon: ImageIcon, label: "Image", action: "image" },
   { icon: VideoIcon, label: "Video", action: "video" },
   { type: "separator" as const },
+  { icon: AlignLeftIcon, label: "ชิดซ้าย", action: "align-left" },
   { icon: AlignCenterIcon, label: "จัดกลาง", action: "align-center" },
   { icon: AlignRightIcon, label: "ชิดขวา", action: "align-right" },
   { icon: ColumnsIcon, label: "Gallery 2 คอลัมน์", action: "gallery" },
@@ -226,6 +228,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
             case "video":
               trackCursor()
               onVideoClick?.()
+              break
+            case "align-left":
+              toggleAlignment(ta, "left", onChange)
               break
             case "align-center":
               toggleAlignment(ta, "center", onChange)

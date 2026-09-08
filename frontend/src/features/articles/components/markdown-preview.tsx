@@ -57,9 +57,9 @@ function preprocessContent(content: string): string {
     }
   )
 
-  // Text alignment: {center}text{/center} or {right}text{/right}
+  // Text alignment: {left|center|right}text{/left|center|right}
   content = content.replace(
-    /\{(center|right)\}(.+?)\{\/\1\}/g,
+    /\{(left|center|right)\}(.+?)\{\/\1\}/g,
     '<p style="text-align:$1">$2</p>'
   )
 

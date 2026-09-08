@@ -66,8 +66,8 @@ class GutenbergFormatter:
                     blocks.append(self._make_gallery(gallery_images))
                 continue
 
-            # Text alignment: {center}...{/center} or {right}...{/right}
-            align_match = re.match(r"^\{(center|right)\}(.+)\{/\1\}$", line)
+            # Text alignment: {left|center|right}...{/left|center|right}
+            align_match = re.match(r"^\{(left|center|right)\}(.+)\{/\1\}$", line)
             if align_match:
                 blocks.append(self._make_paragraph(align_match.group(2), align=align_match.group(1)))
                 i += 1
@@ -165,7 +165,7 @@ class GutenbergFormatter:
             return True
         if line == "{{gallery}}" or line == "{{/gallery}}":
             return True
-        if re.match(r"^\{(center|right)\}.+\{/(center|right)\}$", line):
+        if re.match(r"^\{(left|center|right)\}.+\{/(left|center|right)\}$", line):
             return True
         return False
 
