@@ -459,17 +459,19 @@ async def review_article(req: ReviewArticleRequest):
 {req.content[:8000]}
 
 ## สิ่งที่ต้องตรวจ
-1. **formal_language** — ประโยคที่ใช้ภาษาทางการ/ราชการเกินไป ควรเปลี่ยนเป็นภาษา{req.target_tone}
+1. **formal_language** — ประโยคที่ใช้ภาษาทางการ/ราชการเกินไป เช่น "2 ทศวรรษ", "ดำเนินการ", "บูรณาการ", "ประจักษ์" ควรเปลี่ยนเป็นภาษา{req.target_tone}
 2. **wrong_translation** — คำอังกฤษที่มีคำแปลไทยใน () ที่ความหมายไม่ตรงกัน
 3. **irrelevant_content** — ประโยค/ย่อหน้าที่ไม่เกี่ยวกับหัวข้อ หรือข้อมูลที่ไม่ถูกต้อง/เป็นเท็จ
 4. **keyword_stuffing** — คำ/วลีที่ซ้ำมากเกินไป (เกิน 7 ครั้ง)
-{f"5. **custom_rules** — {req.custom_rules}" if req.custom_rules else ""}
+5. **wrong_brand_name** — ชื่อแบรนด์ที่ถูกเปลี่ยนหรือเขียนผิด เช่น เพิ่ม "TH" ต่อท้าย, แยกคำที่ไม่ควรแยก (เช่น "Flex Frame TH" แทน "FlexFrame"), ใช้ตัวใหญ่-เล็กผิด
+6. **fake_reference** — การอ้างอิงมาตรฐาน ISO, มาตรฐานวัสดุ, หน่วยงาน, สถิติ, หรือแหล่งข้อมูลที่ไม่น่าจะมีจริงหรือไม่ได้ระบุไว้ในเว็บไซต์
+{f"7. **custom_rules** — {req.custom_rules}" if req.custom_rules else ""}
 
 ## Output (JSON)
 {{
   "issues": [
     {{
-      "type": "formal_language|wrong_translation|irrelevant_content|keyword_stuffing|custom_rules",
+      "type": "formal_language|wrong_translation|irrelevant_content|keyword_stuffing|wrong_brand_name|fake_reference|custom_rules",
       "severity": "critical|warning|info",
       "original": "ข้อความต้นฉบับที่มีปัญหา",
       "suggestion": "ข้อเสนอแนะการแก้ไข",
@@ -528,6 +530,8 @@ async def rewrite_article(req: RewriteArticleRequest):
 - แก้คำอังกฤษ-ไทยให้ตรงกัน
 - ห้ามเพิ่มเนื้อหาใหม่ที่ไม่เกี่ยวข้อง
 - ห้ามเปลี่ยน heading text (ยกเว้นมีปัญหา)
+- แก้ชื่อแบรนด์ที่ผิด ห้ามเพิ่ม "TH" ต่อท้ายชื่อแบรนด์ ห้ามแยกคำที่ไม่ควรแยก
+- ลบการอ้างอิงมาตรฐาน ISO, หน่วยงาน, สถิติ ที่ไม่มีจริงออก
 {f"- {req.custom_rules}" if req.custom_rules else ""}
 
 ตอบเป็น Markdown เต็มบทความ ไม่ต้องครอบด้วย ```"""
