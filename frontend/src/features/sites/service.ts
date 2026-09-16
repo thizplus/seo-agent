@@ -118,4 +118,13 @@ export const siteService = {
   async resetFocusQueue(id: string): Promise<void> {
     await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RESET(id))
   },
+
+  async getFocusQueueTrash(id: string): Promise<FocusQueueItem[]> {
+    const res = await apiClient.get<{ data: FocusQueueItem[] }>(API_ROUTES.SITES.FOCUS_QUEUE_TRASH(id))
+    return res.data.data || []
+  },
+
+  async restoreFocusQueueItem(id: string, queueId: string): Promise<void> {
+    await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RESTORE(id, queueId))
+  },
 }

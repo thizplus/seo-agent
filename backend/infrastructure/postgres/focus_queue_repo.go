@@ -51,6 +51,19 @@ func (r *focusQueueRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&models.KeywordFocusQueue{}, id).Error
 }
 
+func (r *focusQueueRepository) Restore(ctx context.Context, id uuid.UUID) error {
+	return r.db.WithContext(ctx).Unscoped().Model(&models.KeywordFocusQueue{}).
+		Where("id = ?", id).Update("deleted_at", nil).Error
+}
+
+func (r *focusQueueRepository) GetDeleted(ctx context.Context, siteID uuid.UUID) ([]models.KeywordFocusQueue, error) {
+	var items []models.KeywordFocusQueue
+	err := r.db.WithContext(ctx).Unscoped().
+		Where("site_id = ? AND deleted_at IS NOT NULL", siteID).
+		Order("priority ASC").Find(&items).Error
+	return items, err
+}
+
 func (r *focusQueueRepository) ResetAll(ctx context.Context, siteID uuid.UUID) error {
 	return r.db.WithContext(ctx).Model(&models.KeywordFocusQueue{}).
 		Where("site_id = ? AND status IN ('completed', 'skipped', 'failed')", siteID).

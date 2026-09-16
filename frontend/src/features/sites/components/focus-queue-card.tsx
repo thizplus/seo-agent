@@ -6,15 +6,20 @@ import {
   useAddFocusQueueItem, useImportFocusQueue,
   useDeleteFocusQueueItem, useSkipFocusQueueItem,
   useRetryFocusQueueItem, useResetFocusQueue,
+  useFocusQueueTrash, useRestoreFocusQueueItem,
 } from "../hooks"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   TargetIcon, PlusIcon, Loader2Icon, Trash2Icon,
   SkipForwardIcon, RotateCcwIcon, CheckCircleIcon,
-  XCircleIcon, ClockIcon, ExternalLinkIcon,
+  XCircleIcon, ClockIcon, ExternalLinkIcon, ArchiveRestoreIcon,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -36,9 +41,13 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
   const skipItem = useSkipFocusQueueItem(siteId)
   const retryItem = useRetryFocusQueueItem(siteId)
   const resetQueue = useResetFocusQueue(siteId)
+  const { data: trash } = useFocusQueueTrash(siteId)
+  const restoreItem = useRestoreFocusQueueItem(siteId)
 
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showTrash, setShowTrash] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; keyword: string } | null>(null)
   const [addForm, setAddForm] = useState({ ...emptyRow, priority: 1 })
 
   // Import: หลาย rows กรอกทีเดียว
@@ -294,7 +303,7 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
                         </Button>
                       </Link>
                     )}
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => { if (confirm("ลบ keyword นี้ออกจากคิว?")) deleteItem.mutate(item.id) }}>
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setDeleteTarget({ id: item.id, keyword: item.primaryKeyword })}>
                       <Trash2Icon className="size-3.5 text-destructive" />
                     </Button>
                   </div>
@@ -327,16 +336,71 @@ export function FocusQueueCard({ siteId }: FocusQueueCardProps) {
           </div>
         )}
 
-        {/* Reset button */}
-        {queue && queue.length > 0 && queue.some(q => q.status === "completed" || q.status === "skipped") && (
-          <div className="flex justify-end">
+        {/* Reset + Trash buttons */}
+        <div className="flex justify-between">
+          {trash && trash.length > 0 ? (
+            <Button variant="ghost" size="sm" onClick={() => setShowTrash(!showTrash)}>
+              <ArchiveRestoreIcon className="mr-1 size-4" />
+              ถังขยะ ({trash.length})
+            </Button>
+          ) : <div />}
+          {queue && queue.length > 0 && queue.some(q => q.status === "completed" || q.status === "skipped") && (
             <Button variant="outline" size="sm" onClick={handleReset} disabled={resetQueue.isPending}>
               <RotateCcwIcon className="mr-1 size-4" />
               Reset คิว (วนรอบใหม่)
             </Button>
+          )}
+        </div>
+
+        {/* Trash list */}
+        {showTrash && trash && trash.length > 0 && (
+          <div className="rounded-lg border border-dashed p-3 flex flex-col gap-2">
+            <p className="text-sm font-medium text-muted-foreground">Keyword ที่ถูกลบ (กดกู้คืนเพื่อเพิ่มกลับ)</p>
+            {trash.map((item) => (
+              <div key={item.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-muted-foreground text-sm">#{item.priority}</span>
+                  <span className="text-sm truncate">{item.primaryKeyword}</span>
+                </div>
+                <Button
+                  variant="outline" size="sm"
+                  onClick={() => restoreItem.mutate(item.id)}
+                  disabled={restoreItem.isPending}
+                >
+                  {restoreItem.isPending ? <Loader2Icon className="mr-1 size-3.5 animate-spin" /> : <ArchiveRestoreIcon className="mr-1 size-3.5" />}
+                  กู้คืน
+                </Button>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ลบ keyword ออกจากคิว?</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณกำลังจะลบ <span className="font-semibold text-foreground">&quot;{deleteTarget?.keyword}&quot;</span> ออกจากคิว
+              <br />
+              สามารถกู้คืนได้ภายหลังจากถังขยะ
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) deleteItem.mutate(deleteTarget.id)
+                setDeleteTarget(null)
+              }}
+            >
+              ลบ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

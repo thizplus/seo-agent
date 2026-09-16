@@ -159,6 +159,7 @@ export const focusQueueKeys = {
   all: ["focusQueue"] as const,
   list: (siteId: string) => [...focusQueueKeys.all, "list", siteId] as const,
   status: (siteId: string) => [...focusQueueKeys.all, "status", siteId] as const,
+  trash: (siteId: string) => [...focusQueueKeys.all, "trash", siteId] as const,
 }
 
 export function useFocusQueue(siteId: string) {
@@ -178,6 +179,7 @@ export function useFocusQueueStatus(siteId: string) {
 function invalidateFocusQueue(queryClient: ReturnType<typeof useQueryClient>, siteId: string) {
   queryClient.invalidateQueries({ queryKey: focusQueueKeys.list(siteId) })
   queryClient.invalidateQueries({ queryKey: focusQueueKeys.status(siteId) })
+  queryClient.invalidateQueries({ queryKey: focusQueueKeys.trash(siteId) })
 }
 
 export function useAddFocusQueueItem(siteId: string) {
@@ -226,6 +228,21 @@ export function useResetFocusQueue(siteId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => siteService.resetFocusQueue(siteId),
+    onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+export function useFocusQueueTrash(siteId: string) {
+  return useQuery({
+    queryKey: focusQueueKeys.trash(siteId),
+    queryFn: () => siteService.getFocusQueueTrash(siteId),
+  })
+}
+
+export function useRestoreFocusQueueItem(siteId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (queueId: string) => siteService.restoreFocusQueueItem(siteId, queueId),
     onSuccess: () => invalidateFocusQueue(queryClient, siteId),
   })
 }

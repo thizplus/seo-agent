@@ -34,6 +34,8 @@ export const API_ROUTES = {
     FOCUS_QUEUE_ITEM: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}`,
     FOCUS_QUEUE_SKIP: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/skip`,
     FOCUS_QUEUE_RETRY: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/retry`,
+    FOCUS_QUEUE_TRASH: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/trash`,
+    FOCUS_QUEUE_RESTORE: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/restore`,
   },
 
   // Pages

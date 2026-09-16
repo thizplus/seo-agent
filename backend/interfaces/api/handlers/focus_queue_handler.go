@@ -251,6 +251,30 @@ func (h *FocusQueueHandler) ResetQueue(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, fiber.Map{"message": "Reset สำเร็จ"})
 }
 
+func (h *FocusQueueHandler) GetTrash(c *fiber.Ctx) error {
+	siteID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid site ID")
+	}
+	items, err := h.queueRepo.GetDeleted(c.UserContext(), siteID)
+	if err != nil {
+		return utils.InternalErrorResponse(c, "ไม่สามารถดึงรายการที่ถูกลบได้")
+	}
+	return utils.SuccessResponse(c, items)
+}
+
+func (h *FocusQueueHandler) RestoreItem(c *fiber.Ctx) error {
+	queueID, err := uuid.Parse(c.Params("queueId"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid queue ID")
+	}
+	if err := h.queueRepo.Restore(c.UserContext(), queueID); err != nil {
+		return utils.InternalErrorResponse(c, "ไม่สามารถกู้คืนได้")
+	}
+	slog.Info("FocusQueue: item restored", "queue_id", queueID)
+	return utils.SuccessResponse(c, nil)
+}
+
 func (h *FocusQueueHandler) GetStatus(c *fiber.Ctx) error {
 	siteID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
