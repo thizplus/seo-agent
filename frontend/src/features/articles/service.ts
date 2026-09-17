@@ -55,6 +55,13 @@ export const articleService = {
     return res.data.data
   },
 
+  async regenerate(id: string): Promise<Article> {
+    const res = await apiClient.post<{ data: Article }>(
+      API_ROUTES.ARTICLES.REGENERATE(id)
+    )
+    return res.data.data
+  },
+
   async deleteArticle(id: string): Promise<void> {
     await apiClient.delete(API_ROUTES.ARTICLES.DELETE(id))
   },

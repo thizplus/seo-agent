@@ -54,6 +54,21 @@ export function useUpdateContent() {
   })
 }
 
+export function useRegenerateArticle() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => articleService.regenerate(id),
+    onSuccess: (article) => {
+      queryClient.invalidateQueries({
+        queryKey: articleKeys.detail(article.id),
+      })
+      queryClient.invalidateQueries({
+        queryKey: articleKeys.list(article.siteId),
+      })
+    },
+  })
+}
+
 export function usePublishArticle() {
   const queryClient = useQueryClient()
   return useMutation({

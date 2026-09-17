@@ -50,6 +50,21 @@ func (h *ArticleHandler) Generate(c *fiber.Ctx) error {
 	return utils.CreatedResponse(c, dto.ArticleToResponse(article))
 }
 
+func (h *ArticleHandler) Regenerate(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+
+	article, err := h.articleService.Regenerate(c.UserContext(), id)
+	if err != nil {
+		slog.Error("Regenerate article failed", "error", err)
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	return utils.SuccessResponse(c, dto.ArticleToResponse(article))
+}
+
 func (h *ArticleHandler) ReviewArticle(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

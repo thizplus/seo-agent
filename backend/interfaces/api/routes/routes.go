@@ -76,6 +76,7 @@ func Setup(app *fiber.App, c *di.Container) {
 
 	articles := protected.Group("/articles")
 	articles.Post("/generate", articleHandler.Generate)
+	articles.Post("/:id/regenerate", articleHandler.Regenerate)
 	articles.Get("/:id", articleHandler.GetByID)
 	articles.Get("/:id/metrics", articleHandler.FetchMetrics)
 	articles.Get("/:id/versions", articleHandler.GetVersions)

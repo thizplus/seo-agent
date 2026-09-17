@@ -122,7 +122,32 @@ class ArticleWriter:
 }}"""
 
         response = await self.llm.generate(article_prompt, system_prompt, temperature=0.7)
-        return self._parse_response(response, keyword)
+        result = self._parse_response(response, keyword)
+
+        # FAQ validation — ถ้าไม่มี FAQ section ให้ retry 1 ครั้ง
+        content = result.get("content", "")
+        if "## FAQ" not in content and "## คำถาม" not in content and "## Q&A" not in content:
+            import logging
+            logging.warning(f"FAQ section missing for keyword: {keyword}, retrying...")
+            faq_prompt = f"""บทความนี้ยังไม่มี FAQ section กรุณาเพิ่ม FAQ 3-5 คำถามที่เกี่ยวกับ "{keyword}" ต่อท้ายบทความ
+
+บทความปัจจุบัน:
+{content[:6000]}
+
+เขียน FAQ section ในรูปแบบ Markdown:
+## FAQ
+
+### คำถาม?
+คำตอบ
+
+ตอบเฉพาะ FAQ section เท่านั้น (เริ่มด้วย ## FAQ)"""
+            faq_response = await self.llm.generate(faq_prompt, temperature=0.7)
+            faq_text = faq_response.strip()
+            if "## FAQ" in faq_text or "## คำถาม" in faq_text:
+                result["content"] = content.rstrip() + "\n\n" + faq_text
+                result["wordCount"] = len(result["content"].split())
+
+        return result
 
     async def rewrite_title(self, title: str, keyword: str) -> str:
         prompt = f"""Rewrite SEO title ให้น่าคลิกขึ้น (CTR สูงขึ้น):

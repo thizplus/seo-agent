@@ -72,6 +72,7 @@ export const API_ROUTES = {
     FEATURED_IMAGE: (id: string) => `${API_BASE}/api/v1/articles/${id}/featured-image`,
     UPDATE_CONTENT: (id: string) => `${API_BASE}/api/v1/articles/${id}/content`,
     PUBLISH: (id: string) => `${API_BASE}/api/v1/articles/${id}/publish`,
+    REGENERATE: (id: string) => `${API_BASE}/api/v1/articles/${id}/regenerate`,
     DELETE: (id: string) => `${API_BASE}/api/v1/articles/${id}`,
     DELETE_IMAGE: (id: string, imageId: string) => `${API_BASE}/api/v1/articles/${id}/images/${imageId}`,
   },

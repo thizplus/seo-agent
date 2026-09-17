@@ -17,7 +17,7 @@ class ClaudeAdapter(LLMPort):
     ) -> str:
         kwargs = {
             "model": self.model,
-            "max_tokens": 8192,
+            "max_tokens": 16384,
             "temperature": temperature,
             "messages": [{"role": "user", "content": prompt}],
         }

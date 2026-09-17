@@ -125,6 +125,65 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 	return article, nil
 }
 
+func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*models.Article, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("article not found: %w", err)
+	}
+	if article.KeywordID == nil {
+		return nil, fmt.Errorf("article has no keyword")
+	}
+
+	site, err := s.siteRepo.GetByID(ctx, article.SiteID)
+	if err != nil {
+		return nil, fmt.Errorf("site not found: %w", err)
+	}
+	keyword, err := s.keywordRepo.GetByID(ctx, *article.KeywordID)
+	if err != nil {
+		return nil, fmt.Errorf("keyword not found: %w", err)
+	}
+
+	// บันทึก version เก่าก่อน regenerate
+	s.saveVersion(article, "before_regenerate")
+
+	article.Status = "generating"
+	s.articleRepo.Update(ctx, article)
+
+	aiReq := map[string]any{
+		"keyword": keyword.Keyword, "site_url": site.URL, "site_name": site.Name,
+		"brand_voice": site.BrandVoice, "industry": site.Industry,
+		"llm_provider": site.LLMProvider, "llm_api_key": site.LLMApiKey,
+	}
+
+	aiResp, err := s.aiEngine.GenerateArticle(ctx, aiReq)
+	if err != nil {
+		article.Status = "failed"
+		s.articleRepo.Update(ctx, article)
+		return nil, fmt.Errorf("AI engine error: %w", err)
+	}
+
+	article.Title = getStr(aiResp, "title")
+	article.Slug = getStr(aiResp, "slug")
+	article.Content = getStr(aiResp, "content")
+	article.MetaDescription = getStr(aiResp, "metaDescription")
+	article.WordCount = getInt(aiResp, "wordCount")
+	article.Status = "completed"
+	article.ContentVersion++
+	if b, err := json.Marshal(aiResp["schemaMarkup"]); err == nil {
+		article.SchemaMarkup = b
+	}
+	if b, err := json.Marshal(aiResp["eeatScore"]); err == nil {
+		article.EEATScore = b
+	}
+	if err := s.articleRepo.Update(ctx, article); err != nil {
+		return nil, err
+	}
+
+	s.saveVersion(article, "regenerate")
+	slog.Info("Article regenerated", "article_id", article.ID, "keyword", keyword.Keyword)
+	return article, nil
+}
+
 func (s *articleServiceImpl) GetByID(ctx context.Context, id uuid.UUID) (*models.Article, error) {
 	return s.articleRepo.GetByID(ctx, id)
 }

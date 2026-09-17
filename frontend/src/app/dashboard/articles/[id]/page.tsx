@@ -6,6 +6,7 @@ import {
   useArticleDetail,
   usePublishArticle,
   useUpdateContent,
+  useRegenerateArticle,
   articleService,
   MarkdownEditor,
   MarkdownPreview,
@@ -65,6 +66,7 @@ export default function ArticleDetailPage({
   const { data: article, isLoading } = useArticleDetail(id)
   const publishArticle = usePublishArticle()
   const updateContent = useUpdateContent()
+  const regenerateArticle = useRegenerateArticle()
 
   // Editor state
   const [title, setTitle] = useState("")
@@ -373,6 +375,12 @@ export default function ArticleDetailPage({
   const handlePublish = () => {
     if (confirm("เผยแพร่บทความนี้ไปยัง WordPress?")) {
       publishArticle.mutate(id)
+    }
+  }
+
+  const handleRegenerate = () => {
+    if (confirm("สร้างบทความใหม่? เนื้อหาเดิมจะถูกบันทึกเป็น version ก่อนหน้า")) {
+      regenerateArticle.mutate(id)
     }
   }
 
@@ -928,6 +936,19 @@ export default function ArticleDetailPage({
         >
           <SparklesIcon className="mr-1 size-3.5" />
           ตรวจสอบ
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRegenerate}
+          disabled={regenerateArticle.isPending}
+        >
+          {regenerateArticle.isPending ? (
+            <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+          ) : (
+            <RefreshCwIcon className="mr-1 size-3.5" />
+          )}
+          {regenerateArticle.isPending ? "กำลังสร้าง..." : "สร้างใหม่"}
         </Button>
         <div className="flex-1" />
         <Button

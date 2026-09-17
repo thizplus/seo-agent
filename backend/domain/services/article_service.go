@@ -27,4 +27,5 @@ type ArticleService interface {
 	SetFeaturedImage(ctx context.Context, id uuid.UUID, imageURL string) (*models.Article, error)
 	DeleteArticleFull(ctx context.Context, id uuid.UUID) error
 	GetVersions(ctx context.Context, id uuid.UUID) ([]models.ArticleVersion, error)
+	Regenerate(ctx context.Context, id uuid.UUID) (*models.Article, error)
 }
