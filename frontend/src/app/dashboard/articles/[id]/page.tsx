@@ -8,6 +8,7 @@ import {
   useUpdateContent,
   useRegenerateArticle,
   useFetchMetrics,
+  useInspectURL,
   useRequestIndexing,
   articleService,
   MarkdownEditor,
@@ -72,6 +73,7 @@ export default function ArticleDetailPage({
   const updateContent = useUpdateContent()
   const regenerateArticle = useRegenerateArticle()
   const requestIndexing = useRequestIndexing()
+  const { data: inspection, isLoading: inspecting, refetch: inspectURL } = useInspectURL(id)
 
   // Editor state
   const [title, setTitle] = useState("")
@@ -861,6 +863,74 @@ export default function ArticleDetailPage({
                       <p className="text-sm text-muted-foreground">
                         กด &quot;ดึงข้อมูล&quot; เพื่อโหลดข้อมูลจาก GSC
                       </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* URL Inspection */}
+              {article.publishStatus === "published" && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <SearchCheckIcon className="size-4" />
+                        สถานะ Google Index
+                      </CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => inspectURL()}
+                        disabled={inspecting}
+                      >
+                        {inspecting ? (
+                          <Loader2Icon className="mr-1 size-4 animate-spin" />
+                        ) : (
+                          <SearchCheckIcon className="mr-1 size-4" />
+                        )}
+                        {inspecting ? "กำลังตรวจ..." : "ตรวจสอบ"}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {!inspection ? (
+                      <p className="text-sm text-muted-foreground">
+                        กด &quot;ตรวจสอบ&quot; เพื่อเช็คว่า Google index บทความนี้แล้วหรือยัง
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant={inspection.verdict === "PASS" ? "default" : "destructive"}
+                            className={inspection.verdict === "PASS" ? "bg-green-600" : ""}
+                          >
+                            {inspection.verdict === "PASS" ? "Indexed" : inspection.verdict === "NEUTRAL" ? "ไม่ทราบ" : "ไม่ Index"}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {inspection.coverageState}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Crawled As: </span>
+                            {inspection.crawledAs || "-"}
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Page Fetch: </span>
+                            {inspection.pageFetchState || "-"}
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Robots.txt: </span>
+                            {inspection.robotsTxtState || "-"}
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Crawl ล่าสุด: </span>
+                            {inspection.lastCrawlTime
+                              ? new Date(inspection.lastCrawlTime).toLocaleDateString("th-TH")
+                              : "-"}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </CardContent>
                 </Card>

@@ -214,6 +214,11 @@ class RequestIndexingRequest(BaseModel):
     url: str
 
 
+class InspectURLRequest(BaseModel):
+    url: str
+    gsc_site_url: str
+
+
 class HealthResponse(BaseModel):
     status: str
     service: str

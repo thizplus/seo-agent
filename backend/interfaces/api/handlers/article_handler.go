@@ -403,6 +403,20 @@ func (h *ArticleHandler) RequestIndexing(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, result)
 }
 
+func (h *ArticleHandler) InspectURL(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+
+	result, err := h.articleService.InspectURL(c.UserContext(), id)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	return utils.SuccessResponse(c, result)
+}
+
 func (h *ArticleHandler) GetMetricsHistory(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

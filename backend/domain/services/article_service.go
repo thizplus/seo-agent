@@ -31,4 +31,5 @@ type ArticleService interface {
 	GetSiteAnalyticsSummary(ctx context.Context, siteID uuid.UUID) (map[string]any, error)
 	GetMetricsHistory(ctx context.Context, id uuid.UUID, days int) ([]models.ArticleMetricsHistory, error)
 	RequestIndexing(ctx context.Context, id uuid.UUID) (map[string]any, error)
+	InspectURL(ctx context.Context, id uuid.UUID) (map[string]any, error)
 }

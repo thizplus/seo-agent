@@ -93,6 +93,14 @@ export function useFetchMetrics(id: string) {
   })
 }
 
+export function useInspectURL(id: string) {
+  return useQuery({
+    queryKey: [...articleKeys.metrics(id), "inspect"] as const,
+    queryFn: () => articleService.inspectURL(id),
+    enabled: false,
+  })
+}
+
 export function useRequestIndexing() {
   return useMutation({
     mutationFn: (id: string) => articleService.requestIndexing(id),

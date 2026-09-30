@@ -28,6 +28,7 @@ from models.schemas import (
     RewriteArticleRequest,
     ScrapePageImagesRequest,
     RequestIndexingRequest,
+    InspectURLRequest,
     HealthResponse,
 )
 from pkg.di.container import Container
@@ -159,6 +160,18 @@ async def request_indexing(req: RequestIndexingRequest):
         from utils.indexing_client import IndexingClient
         client = IndexingClient()
         result = client.request_indexing(req.url)
+        return {"success": True, "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/inspect-url")
+async def inspect_url(req: InspectURLRequest):
+    """ตรวจสอบสถานะ index ของ URL"""
+    try:
+        from utils.indexing_client import URLInspectionClient
+        client = URLInspectionClient()
+        result = client.inspect(req.url, req.gsc_site_url)
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Article, ArticleMetrics, MetricsHistoryPoint, GenerateArticleRequest } from "./types"
+import type { Article, ArticleMetrics, MetricsHistoryPoint, URLInspectionResult, GenerateArticleRequest } from "./types"
 
 export const articleService = {
   async getBySiteId(siteId: string): Promise<Article[]> {
@@ -134,6 +134,11 @@ export const articleService = {
       API_ROUTES.ARTICLES.UPDATE_CONTENT(id),
       data
     )
+    return res.data.data
+  },
+
+  async inspectURL(id: string): Promise<URLInspectionResult> {
+    const res = await apiClient.get<{ data: URLInspectionResult }>(API_ROUTES.ARTICLES.INSPECT(id))
     return res.data.data
   },
 

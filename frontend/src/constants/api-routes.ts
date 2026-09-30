@@ -61,6 +61,7 @@ export const API_ROUTES = {
     METRICS: (id: string) => `${API_BASE}/api/v1/articles/${id}/metrics`,
     METRICS_HISTORY: (id: string) => `${API_BASE}/api/v1/articles/${id}/metrics/history`,
     REQUEST_INDEXING: (id: string) => `${API_BASE}/api/v1/articles/${id}/request-indexing`,
+    INSPECT: (id: string) => `${API_BASE}/api/v1/articles/${id}/inspect`,
     VERSIONS: (id: string) => `${API_BASE}/api/v1/articles/${id}/versions`,
     OPTIMIZE: (id: string) => `${API_BASE}/api/v1/articles/${id}/optimize`,
     IMAGES: (id: string) => `${API_BASE}/api/v1/articles/${id}/images`,

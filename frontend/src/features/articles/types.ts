@@ -49,6 +49,16 @@ export interface ArticleQuery {
   impressions: number
 }
 
+export interface URLInspectionResult {
+  verdict: string
+  coverageState: string
+  robotsTxtState: string
+  indexingState: string
+  lastCrawlTime: string
+  pageFetchState: string
+  crawledAs: string
+}
+
 export interface MetricsHistoryPoint {
   checkedAt: string
   clicks: number

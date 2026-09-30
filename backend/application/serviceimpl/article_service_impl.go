@@ -668,6 +668,34 @@ func (s *articleServiceImpl) RequestIndexing(ctx context.Context, id uuid.UUID) 
 	return data, nil
 }
 
+func (s *articleServiceImpl) InspectURL(ctx context.Context, id uuid.UUID) (map[string]any, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if article.PublishedURL == "" {
+		return nil, fmt.Errorf("article not published yet")
+	}
+	site, err := s.siteRepo.GetByID(ctx, article.SiteID)
+	if err != nil {
+		return nil, err
+	}
+	if site.GSCSiteURL == "" {
+		return nil, fmt.Errorf("GSC not connected")
+	}
+
+	resp, err := s.aiEngine.InspectURL(ctx, map[string]any{
+		"url":          article.PublishedURL,
+		"gsc_site_url": site.GSCSiteURL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	data, _ := resp["data"].(map[string]any)
+	return data, nil
+}
+
 func (s *articleServiceImpl) saveMetricsHistory(ctx context.Context, articleID uuid.UUID, metrics map[string]any) {
 	clicks := getInt(metrics, "clicks")
 	impressions := getInt(metrics, "impressions")

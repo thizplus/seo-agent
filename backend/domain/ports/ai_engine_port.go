@@ -30,4 +30,5 @@ type AIEnginePort interface {
 	RewriteArticle(ctx context.Context, req map[string]any) (map[string]any, error)
 	FetchSiteMetrics(ctx context.Context, req map[string]any) (map[string]any, error)
 	RequestIndexing(ctx context.Context, req map[string]any) (map[string]any, error)
+	InspectURL(ctx context.Context, req map[string]any) (map[string]any, error)
 }
