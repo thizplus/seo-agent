@@ -28,4 +28,5 @@ type AIEnginePort interface {
 	ScrapePageImages(ctx context.Context, pageURL string) (map[string]any, error)
 	ReviewArticle(ctx context.Context, req map[string]any) (map[string]any, error)
 	RewriteArticle(ctx context.Context, req map[string]any) (map[string]any, error)
+	FetchSiteMetrics(ctx context.Context, req map[string]any) (map[string]any, error)
 }

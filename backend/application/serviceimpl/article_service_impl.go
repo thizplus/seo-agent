@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -257,6 +258,9 @@ func (s *articleServiceImpl) RunOptimizer(ctx context.Context, id uuid.UUID) (ma
 	if err != nil {
 		return nil, err
 	}
+
+	// เก็บ metrics history ทุกรอบ optimize (scheduler เรียกทุก 12 ชม.)
+	s.saveMetricsHistory(ctx, id, metrics)
 
 	decideResp, err := s.aiEngine.DecideOptimization(ctx, metrics)
 	if err != nil {
@@ -643,6 +647,150 @@ func (s *articleServiceImpl) GetVersions(ctx context.Context, id uuid.UUID) ([]m
 	var versions []models.ArticleVersion
 	err := s.db.WithContext(ctx).Where("article_id = ?", id).Order("version DESC").Find(&versions).Error
 	return versions, err
+}
+
+func (s *articleServiceImpl) saveMetricsHistory(ctx context.Context, articleID uuid.UUID, metrics map[string]any) {
+	clicks := getInt(metrics, "clicks")
+	impressions := getInt(metrics, "impressions")
+	ctr := 0.0
+	if v, ok := metrics["ctr"].(float64); ok {
+		ctr = v
+	}
+	position := 0.0
+	if v, ok := metrics["position"].(float64); ok {
+		position = v
+	}
+	indexed := false
+	if v, ok := metrics["indexed"].(bool); ok {
+		indexed = v
+	}
+	var topQueries []byte
+	if q, ok := metrics["queries"]; ok {
+		topQueries, _ = json.Marshal(q)
+	}
+
+	history := models.ArticleMetricsHistory{
+		ArticleID:   articleID,
+		Clicks:      clicks,
+		Impressions: impressions,
+		CTR:         ctr,
+		Position:    position,
+		Indexed:     indexed,
+		TopQueries:  topQueries,
+		CheckedAt:   time.Now(),
+	}
+	if err := s.db.WithContext(ctx).Create(&history).Error; err != nil {
+		slog.WarnContext(ctx, "Failed to save metrics history", "article_id", articleID, "error", err)
+	}
+}
+
+func (s *articleServiceImpl) GetMetricsHistory(ctx context.Context, id uuid.UUID, days int) ([]models.ArticleMetricsHistory, error) {
+	var history []models.ArticleMetricsHistory
+	since := time.Now().AddDate(0, 0, -days)
+	err := s.db.WithContext(ctx).
+		Where("article_id = ? AND checked_at >= ?", id, since).
+		Order("checked_at ASC").
+		Find(&history).Error
+	return history, err
+}
+
+func (s *articleServiceImpl) GetSiteAnalyticsSummary(ctx context.Context, siteID uuid.UUID) (map[string]any, error) {
+	site, err := s.siteRepo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, fmt.Errorf("site not found: %w", err)
+	}
+	if site.GSCRefreshToken == "" {
+		return nil, fmt.Errorf("GSC not connected")
+	}
+
+	// ดึง metrics ทั้ง site จาก ai-engine
+	resp, err := s.aiEngine.FetchSiteMetrics(ctx, map[string]any{
+		"gsc_refresh_token": site.GSCRefreshToken,
+		"gsc_site_url":      site.GSCSiteURL,
+		"days":              28,
+	})
+	if err != nil {
+		return nil, err
+	}
+	data, _ := resp["data"].(map[string]any)
+
+	// ดึง published articles จาก DB เพื่อ match กับ pages
+	articles, err := s.articleRepo.GetBySiteID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+
+	// สร้าง map: publishedURL → article
+	articleMap := make(map[string]map[string]any)
+	publishedCount := 0
+	for _, a := range articles {
+		if a.PublishedURL != "" {
+			publishedCount++
+			articleMap[a.PublishedURL] = map[string]any{
+				"id":    a.ID.String(),
+				"title": a.Title,
+			}
+		}
+	}
+
+	// Match pages จาก GSC กับ articles ใน DB
+	var topArticles []map[string]any
+	var lowCtrArticles []map[string]any
+	indexedCount := 0
+
+	if pages, ok := data["pages"].([]any); ok {
+		for _, p := range pages {
+			pm, ok := p.(map[string]any)
+			if !ok {
+				continue
+			}
+			pageURL := getStr(pm, "page")
+			impressions := getInt(pm, "impressions")
+			if impressions > 0 {
+				indexedCount++
+			}
+
+			if articleInfo, found := articleMap[pageURL]; found {
+				entry := map[string]any{
+					"articleId":   articleInfo["id"],
+					"title":       articleInfo["title"],
+					"url":         pageURL,
+					"clicks":      pm["clicks"],
+					"impressions": pm["impressions"],
+					"ctr":         pm["ctr"],
+					"position":    pm["position"],
+				}
+				topArticles = append(topArticles, entry)
+
+				// CTR < 2% แต่ impressions > 50 = โอกาสปรับปรุง
+				ctr, _ := pm["ctr"].(float64)
+				if ctr < 0.02 && impressions > 50 {
+					lowCtrArticles = append(lowCtrArticles, entry)
+				}
+			}
+		}
+	}
+
+	// จำกัด top 5
+	if len(topArticles) > 5 {
+		topArticles = topArticles[:5]
+	}
+	if len(lowCtrArticles) > 5 {
+		lowCtrArticles = lowCtrArticles[:5]
+	}
+
+	return map[string]any{
+		"totalClicks":      data["totalClicks"],
+		"totalImpressions": data["totalImpressions"],
+		"avgCtr":           data["avgCtr"],
+		"avgPosition":      data["avgPosition"],
+		"totalArticles":    len(articles),
+		"publishedArticles": publishedCount,
+		"indexedArticles":  indexedCount,
+		"topArticles":      topArticles,
+		"lowCtrArticles":   lowCtrArticles,
+		"topQueries":       data["topQueries"],
+	}, nil
 }
 
 func getStr(m map[string]any, key string) string {

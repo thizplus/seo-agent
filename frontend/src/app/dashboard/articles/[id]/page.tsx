@@ -7,6 +7,7 @@ import {
   usePublishArticle,
   useUpdateContent,
   useRegenerateArticle,
+  useFetchMetrics,
   articleService,
   MarkdownEditor,
   MarkdownPreview,
@@ -14,6 +15,7 @@ import {
   VideoInsertDialog,
   ReviewDialog,
   GalleryInsertDialog,
+  MetricsChart,
 } from "@/features/articles"
 import type { MarkdownEditorRef } from "@/features/articles"
 import { NAV_ROUTES } from "@/constants/nav"
@@ -102,8 +104,7 @@ export default function ArticleDetailPage({
   const featuredFileRef = useRef<HTMLInputElement>(null)
 
   // Info tab
-  const [metrics, setMetrics] = useState<Record<string, any> | null>(null)
-  const [metricsLoading, setMetricsLoading] = useState(false)
+  const { data: metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useFetchMetrics(id)
   const [versions, setVersions] = useState<any[]>([])
   const [optimizing, setOptimizing] = useState(false)
 
@@ -331,17 +332,6 @@ export default function ArticleDetailPage({
   }
 
   // --- Info tab handlers ---
-  const handleFetchMetrics = async () => {
-    setMetricsLoading(true)
-    try {
-      setMetrics(await articleService.fetchMetrics(id))
-    } catch {
-      setMetrics(null)
-    } finally {
-      setMetricsLoading(false)
-    }
-  }
-
   const handleLoadVersions = async () => {
     try {
       setVersions(await articleService.getVersions(id))
@@ -774,7 +764,7 @@ export default function ArticleDetailPage({
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={handleFetchMetrics}
+                          onClick={() => refetchMetrics()}
                           disabled={metricsLoading}
                         >
                           {metricsLoading ? (
@@ -802,29 +792,67 @@ export default function ArticleDetailPage({
                   </CardHeader>
                   <CardContent>
                     {metrics ? (
-                      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">{metrics.clicks || 0}</div>
-                          <div className="text-sm text-muted-foreground">คลิก</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">
-                            {metrics.impressions || 0}
+                      <div className="flex flex-col gap-4">
+                        {/* Summary cards */}
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">{metrics.clicks}</div>
+                            <div className="text-sm text-muted-foreground">คลิก</div>
                           </div>
-                          <div className="text-sm text-muted-foreground">แสดงผล</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">
-                            {((metrics.ctr || 0) * 100).toFixed(1)}%
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">{metrics.impressions}</div>
+                            <div className="text-sm text-muted-foreground">แสดงผล</div>
                           </div>
-                          <div className="text-sm text-muted-foreground">CTR</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">
-                            {metrics.position || "-"}
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {(metrics.ctr * 100).toFixed(1)}%
+                            </div>
+                            <div className="text-sm text-muted-foreground">CTR</div>
                           </div>
-                          <div className="text-sm text-muted-foreground">อันดับเฉลี่ย</div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {metrics.position || "-"}
+                            </div>
+                            <div className="text-sm text-muted-foreground">อันดับเฉลี่ย</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {metrics.indexed ? (
+                                <span className="text-green-600">Indexed</span>
+                              ) : (
+                                <span className="text-amber-500">ยังไม่ Index</span>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">สถานะ</div>
+                          </div>
                         </div>
+
+                        {/* Top Queries */}
+                        {metrics.queries && metrics.queries.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">คำค้นหาที่พบบทความนี้ (28 วัน)</h4>
+                            <div className="rounded-md border">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b bg-muted/50">
+                                    <th className="text-left p-2 font-medium">คำค้นหา</th>
+                                    <th className="text-right p-2 font-medium">คลิก</th>
+                                    <th className="text-right p-2 font-medium">แสดงผล</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {metrics.queries.slice(0, 10).map((q) => (
+                                    <tr key={q.query} className="border-b last:border-0">
+                                      <td className="p-2">{q.query}</td>
+                                      <td className="text-right p-2">{q.clicks}</td>
+                                      <td className="text-right p-2">{q.impressions}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
@@ -833,6 +861,11 @@ export default function ArticleDetailPage({
                     )}
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Metrics Trend Chart */}
+              {article.publishStatus === "published" && (
+                <MetricsChart articleId={id} />
               )}
 
               {/* Version History */}

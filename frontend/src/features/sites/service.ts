@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult, SiteMember, FocusQueueItem, FocusQueueStatus } from "./types"
+import type { Site, CreateSiteRequest, UpdateSiteRequest, TopicClusterResult, CompetitorResult, PipelineResult, SiteMember, FocusQueueItem, FocusQueueStatus, SiteAnalyticsSummary } from "./types"
 
 export const siteService = {
   async getAll(): Promise<Site[]> {
@@ -126,5 +126,10 @@ export const siteService = {
 
   async restoreFocusQueueItem(id: string, queueId: string): Promise<void> {
     await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RESTORE(id, queueId))
+  },
+
+  async getAnalyticsSummary(id: string): Promise<SiteAnalyticsSummary> {
+    const res = await apiClient.get<{ data: SiteAnalyticsSummary }>(API_ROUTES.SITES.ANALYTICS_SUMMARY(id))
+    return res.data.data
   },
 }

@@ -28,4 +28,6 @@ type ArticleService interface {
 	DeleteArticleFull(ctx context.Context, id uuid.UUID) error
 	GetVersions(ctx context.Context, id uuid.UUID) ([]models.ArticleVersion, error)
 	Regenerate(ctx context.Context, id uuid.UUID) (*models.Article, error)
+	GetSiteAnalyticsSummary(ctx context.Context, siteID uuid.UUID) (map[string]any, error)
+	GetMetricsHistory(ctx context.Context, id uuid.UUID, days int) ([]models.ArticleMetricsHistory, error)
 }

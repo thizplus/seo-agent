@@ -6,6 +6,7 @@ export const articleKeys = {
   all: ["articles"] as const,
   list: (siteId: string) => [...articleKeys.all, "list", siteId] as const,
   detail: (id: string) => [...articleKeys.all, "detail", id] as const,
+  metrics: (id: string) => [...articleKeys.all, "metrics", id] as const,
 }
 
 export function useArticleList(siteId: string) {
@@ -81,5 +82,21 @@ export function usePublishArticle() {
         queryKey: articleKeys.list(article.siteId),
       })
     },
+  })
+}
+
+export function useFetchMetrics(id: string) {
+  return useQuery({
+    queryKey: articleKeys.metrics(id),
+    queryFn: () => articleService.fetchMetrics(id),
+    enabled: false,
+  })
+}
+
+export function useMetricsHistory(id: string) {
+  return useQuery({
+    queryKey: [...articleKeys.metrics(id), "history"] as const,
+    queryFn: () => articleService.getMetricsHistory(id, 90),
+    enabled: false,
   })
 }

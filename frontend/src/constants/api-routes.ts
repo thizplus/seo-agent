@@ -36,6 +36,7 @@ export const API_ROUTES = {
     FOCUS_QUEUE_RETRY: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/retry`,
     FOCUS_QUEUE_TRASH: (id: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/trash`,
     FOCUS_QUEUE_RESTORE: (id: string, queueId: string) => `${API_BASE}/api/v1/sites/${id}/focus-queue/${queueId}/restore`,
+    ANALYTICS_SUMMARY: (id: string) => `${API_BASE}/api/v1/sites/${id}/analytics/summary`,
   },
 
   // Pages
@@ -58,6 +59,7 @@ export const API_ROUTES = {
     GENERATE: `${API_BASE}/api/v1/articles/generate`,
     BY_ID: (id: string) => `${API_BASE}/api/v1/articles/${id}`,
     METRICS: (id: string) => `${API_BASE}/api/v1/articles/${id}/metrics`,
+    METRICS_HISTORY: (id: string) => `${API_BASE}/api/v1/articles/${id}/metrics/history`,
     VERSIONS: (id: string) => `${API_BASE}/api/v1/articles/${id}/versions`,
     OPTIMIZE: (id: string) => `${API_BASE}/api/v1/articles/${id}/optimize`,
     IMAGES: (id: string) => `${API_BASE}/api/v1/articles/${id}/images`,

@@ -172,6 +172,18 @@ func (h *SiteHandler) RunPipeline(c *fiber.Ctx) error {
 	})
 }
 
+func (h *SiteHandler) AnalyticsSummary(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid site ID")
+	}
+	data, err := h.articleService.GetSiteAnalyticsSummary(c.UserContext(), id)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+	return utils.SuccessResponse(c, data)
+}
+
 func (h *SiteHandler) Delete(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

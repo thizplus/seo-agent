@@ -6,6 +6,7 @@ export const siteKeys = {
   all: ["sites"] as const,
   list: () => [...siteKeys.all, "list"] as const,
   detail: (id: string) => [...siteKeys.all, "detail", id] as const,
+  analytics: (id: string) => [...siteKeys.all, "analytics", id] as const,
 }
 
 export function useSiteList() {
@@ -244,5 +245,15 @@ export function useRestoreFocusQueueItem(siteId: string) {
   return useMutation({
     mutationFn: (queueId: string) => siteService.restoreFocusQueueItem(siteId, queueId),
     onSuccess: () => invalidateFocusQueue(queryClient, siteId),
+  })
+}
+
+// --- Analytics ---
+
+export function useSiteAnalytics(siteId: string) {
+  return useQuery({
+    queryKey: siteKeys.analytics(siteId),
+    queryFn: () => siteService.getAnalyticsSummary(siteId),
+    enabled: false,
   })
 }

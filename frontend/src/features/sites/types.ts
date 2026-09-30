@@ -100,6 +100,35 @@ export interface FocusQueueStatus {
   nextKeyword?: { priority: number; primaryKeyword: string; secondaryKeywords: string }
 }
 
+export interface SiteAnalyticsSummary {
+  totalClicks: number
+  totalImpressions: number
+  avgCtr: number
+  avgPosition: number
+  totalArticles: number
+  publishedArticles: number
+  indexedArticles: number
+  topArticles: SiteArticleMetric[]
+  lowCtrArticles: SiteArticleMetric[]
+  topQueries: SiteQuery[]
+}
+
+export interface SiteArticleMetric {
+  articleId: string
+  title: string
+  url: string
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+}
+
+export interface SiteQuery {
+  query: string
+  clicks: number
+  impressions: number
+}
+
 export interface CompetitorResult {
   url: string
   summary: string

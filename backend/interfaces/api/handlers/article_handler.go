@@ -389,6 +389,25 @@ func (h *ArticleHandler) FetchMetrics(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, metrics)
 }
 
+func (h *ArticleHandler) GetMetricsHistory(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.BadRequestResponse(c, "Invalid article ID")
+	}
+
+	days := c.QueryInt("days", 90)
+	if days < 1 || days > 365 {
+		days = 90
+	}
+
+	history, err := h.articleService.GetMetricsHistory(c.UserContext(), id, days)
+	if err != nil {
+		return utils.BadRequestResponse(c, err.Error())
+	}
+
+	return utils.SuccessResponse(c, history)
+}
+
 func (h *ArticleHandler) RunOptimizer(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {

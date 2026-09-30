@@ -12,6 +12,7 @@ from models.schemas import (
     RewriteTitleRequest,
     ExpandArticleRequest,
     FetchMetricsRequest,
+    FetchSiteMetricsRequest,
     OptimizeArticleRequest,
     AnalyzeSiteRequest,
     DiscoverKeywordsRequest,
@@ -184,6 +185,17 @@ async def fetch_metrics(req: FetchMetricsRequest):
             req.gsc_refresh_token, req.gsc_site_url, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
         )
         return {"success": True, "data": gsc.get_page_metrics(req.page_url, days=req.days)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/fetch-site-metrics")
+async def fetch_site_metrics(req: FetchSiteMetricsRequest):
+    try:
+        gsc = container.create_search_console(
+            req.gsc_refresh_token, req.gsc_site_url, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+        )
+        return {"success": True, "data": gsc.get_site_metrics(days=req.days)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

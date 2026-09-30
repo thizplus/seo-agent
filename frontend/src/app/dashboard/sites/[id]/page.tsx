@@ -17,8 +17,9 @@ import {
   MembersCard,
   FocusQueueCard,
   AiSettingsCard,
+  AnalyticsCard,
 } from "@/features/sites"
-import { LayoutDashboardIcon, FileTextIcon, KeyIcon, WrenchIcon } from "lucide-react"
+import { LayoutDashboardIcon, FileTextIcon, KeyIcon, WrenchIcon, BarChart3Icon } from "lucide-react"
 
 export default function SiteDetailPage({
   params,
@@ -71,6 +72,10 @@ export default function SiteDetailPage({
               คีย์เวิร์ด
             </TabsTrigger>
             <TabsTrigger value={3}>
+              <BarChart3Icon className="size-4" />
+              วัดผล
+            </TabsTrigger>
+            <TabsTrigger value={4}>
               <WrenchIcon className="size-4" />
               เครื่องมือ
             </TabsTrigger>
@@ -94,6 +99,10 @@ export default function SiteDetailPage({
           </TabsContent>
 
           <TabsContent value={3} className="flex flex-col gap-6">
+            <AnalyticsCard siteId={id} hasGsc={site.hasGsc} />
+          </TabsContent>
+
+          <TabsContent value={4} className="flex flex-col gap-6">
             <GscConnectionCard site={site} />
             <CompetitorAnalysisCard siteId={id} />
             <MembersCard siteId={id} />

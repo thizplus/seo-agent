@@ -65,6 +65,12 @@ class FetchMetricsRequest(BaseModel):
     days: int = 28
 
 
+class FetchSiteMetricsRequest(BaseModel):
+    gsc_refresh_token: str
+    gsc_site_url: str
+    days: int = 28
+
+
 class OptimizeArticleRequest(BaseModel):
     title: str = ""
     content: str = ""

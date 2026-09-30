@@ -33,3 +33,27 @@ export interface GenerateArticleRequest {
   writingTone?: string
   contentGuide?: string
 }
+
+export interface ArticleMetrics {
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+  indexed: boolean
+  queries: ArticleQuery[]
+}
+
+export interface ArticleQuery {
+  query: string
+  clicks: number
+  impressions: number
+}
+
+export interface MetricsHistoryPoint {
+  checkedAt: string
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+  indexed: boolean
+}

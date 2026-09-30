@@ -124,6 +124,10 @@ func (c *HTTPClient) RewriteArticle(ctx context.Context, req map[string]any) (ma
 	return c.call(ctx, "/rewrite-article", req)
 }
 
+func (c *HTTPClient) FetchSiteMetrics(ctx context.Context, req map[string]any) (map[string]any, error) {
+	return c.call(ctx, "/fetch-site-metrics", req)
+}
+
 func (c *HTTPClient) ScrapePageImages(ctx context.Context, pageURL string) (map[string]any, error) {
 	return c.call(ctx, "/scrape-page-images", map[string]string{"page_url": pageURL})
 }

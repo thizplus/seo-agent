@@ -89,3 +89,74 @@ class GSCClient:
             "indexed": total_impressions > 0,
             "queries": queries,
         }
+
+    def get_site_metrics(self, days: int = 28) -> dict:
+        """ดึง metrics รวมทั้ง site — แยกตาม page"""
+        end_date = datetime.now().date() - timedelta(days=3)
+        start_date = end_date - timedelta(days=days)
+
+        body = {
+            "startDate": start_date.isoformat(),
+            "endDate": end_date.isoformat(),
+            "dimensions": ["page"],
+            "rowLimit": 5000,
+        }
+
+        response = (
+            self.service.searchanalytics()
+            .query(siteUrl=self.site_url, body=body)
+            .execute()
+        )
+
+        rows = response.get("rows", [])
+        total_clicks = sum(r.get("clicks", 0) for r in rows)
+        total_impressions = sum(r.get("impressions", 0) for r in rows)
+        avg_ctr = total_clicks / total_impressions if total_impressions > 0 else 0
+        avg_position = (
+            sum(r.get("position", 0) * r.get("impressions", 0) for r in rows) / total_impressions
+            if total_impressions > 0
+            else 0
+        )
+
+        # แยก metrics ต่อ page
+        pages = []
+        for r in sorted(rows, key=lambda x: x.get("clicks", 0), reverse=True):
+            keys = r.get("keys", [])
+            pages.append({
+                "page": keys[0] if keys else "",
+                "clicks": r.get("clicks", 0),
+                "impressions": r.get("impressions", 0),
+                "ctr": round(r.get("ctr", 0), 4),
+                "position": round(r.get("position", 0), 1),
+            })
+
+        # ดึง top queries แยกต่างหาก
+        query_body = {
+            "startDate": start_date.isoformat(),
+            "endDate": end_date.isoformat(),
+            "dimensions": ["query"],
+            "rowLimit": 20,
+        }
+        query_response = (
+            self.service.searchanalytics()
+            .query(siteUrl=self.site_url, body=query_body)
+            .execute()
+        )
+        queries = []
+        for r in query_response.get("rows", []):
+            keys = r.get("keys", [])
+            queries.append({
+                "query": keys[0] if keys else "",
+                "clicks": r.get("clicks", 0),
+                "impressions": r.get("impressions", 0),
+            })
+
+        return {
+            "totalClicks": total_clicks,
+            "totalImpressions": total_impressions,
+            "avgCtr": round(avg_ctr, 4),
+            "avgPosition": round(avg_position, 1),
+            "totalPages": len(rows),
+            "pages": pages,
+            "topQueries": queries,
+        }

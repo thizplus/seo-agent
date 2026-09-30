@@ -357,7 +357,7 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-// Step 4: Ranking Tracker — ดึง GSC metrics + auto optimize
+// Step 4: Ranking Tracker — ดึง GSC metrics + เก็บ history + auto optimize
 func (s *Scheduler) runRankingTracker() {
 	ctx := context.Background()
 
@@ -382,6 +382,7 @@ func (s *Scheduler) runRankingTracker() {
 				continue
 			}
 
+			// Optimize (ภายใน FetchMetrics + Decide + Execute)
 			result, err := s.articleService.RunOptimizer(ctx, article.ID)
 			if err != nil {
 				continue
@@ -394,3 +395,4 @@ func (s *Scheduler) runRankingTracker() {
 		}
 	}
 }
+

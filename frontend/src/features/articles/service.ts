@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Article, GenerateArticleRequest } from "./types"
+import type { Article, ArticleMetrics, MetricsHistoryPoint, GenerateArticleRequest } from "./types"
 
 export const articleService = {
   async getBySiteId(siteId: string): Promise<Article[]> {
@@ -25,9 +25,17 @@ export const articleService = {
     return res.data.data
   },
 
-  async fetchMetrics(id: string): Promise<Record<string, any>> {
-    const res = await apiClient.get(API_ROUTES.ARTICLES.METRICS(id))
+  async fetchMetrics(id: string): Promise<ArticleMetrics> {
+    const res = await apiClient.get<{ data: ArticleMetrics }>(API_ROUTES.ARTICLES.METRICS(id))
     return res.data.data
+  },
+
+  async getMetricsHistory(id: string, days: number = 90): Promise<MetricsHistoryPoint[]> {
+    const res = await apiClient.get<{ data: MetricsHistoryPoint[] }>(
+      API_ROUTES.ARTICLES.METRICS_HISTORY(id),
+      { params: { days } }
+    )
+    return res.data.data || []
   },
 
   async getVersions(id: string): Promise<any[]> {

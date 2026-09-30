@@ -81,6 +81,28 @@ func (am *ArticleMetrics) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+type ArticleMetricsHistory struct {
+	ID          uuid.UUID      `gorm:"type:uuid;primaryKey"`
+	ArticleID   uuid.UUID      `gorm:"type:uuid;not null;index"`
+	Clicks      int            `gorm:"default:0"`
+	Impressions int            `gorm:"default:0"`
+	CTR         float64        `gorm:"default:0"`
+	Position    float64        `gorm:"default:0"`
+	Indexed     bool           `gorm:"default:false"`
+	TopQueries  datatypes.JSON `gorm:"type:jsonb"`
+	CheckedAt   time.Time
+	CreatedAt   time.Time
+
+	Article Article `gorm:"foreignKey:ArticleID;constraint:OnDelete:CASCADE"`
+}
+
+func (h *ArticleMetricsHistory) BeforeCreate(tx *gorm.DB) error {
+	if h.ID == uuid.Nil {
+		h.ID = uuid.New()
+	}
+	return nil
+}
+
 type OptimizationLog struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primaryKey"`
 	ArticleID uuid.UUID      `gorm:"type:uuid;not null;index"`
