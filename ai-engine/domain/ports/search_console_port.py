@@ -12,3 +12,12 @@ class SearchConsolePort(ABC):
             {"clicks", "impressions", "ctr", "position", "indexed", "queries": [...]}
         """
         ...
+
+    @abstractmethod
+    def get_site_metrics(self, days: int = 28) -> dict:
+        """ดึง metrics รวมทั้ง site แยกตาม page
+
+        Returns:
+            {"totalClicks", "totalImpressions", "avgCtr", "avgPosition", "totalPages", "pages": [...], "topQueries": [...]}
+        """
+        ...
