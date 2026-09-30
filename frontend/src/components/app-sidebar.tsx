@@ -11,20 +11,26 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuButton,
   SidebarMenuItem,
   sidebarMenuButtonVariants,
 } from "@/components/ui/sidebar"
 import {
   LayoutDashboardIcon,
   GlobeIcon,
+  PlusIcon,
   SearchIcon,
 } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { NAV_ROUTES } from "@/constants/nav"
 import { authStore, type User } from "@/features/auth"
+import { siteService } from "@/features/sites"
 
-const navItems = [
+const mainNavItems = [
   {
     title: "แดชบอร์ด",
     url: NAV_ROUTES.DASHBOARD,
@@ -32,22 +38,18 @@ const navItems = [
     isActive: true,
     items: [],
   },
-  {
-    title: "เว็บไซต์",
-    url: NAV_ROUTES.SITES.LIST,
-    icon: <GlobeIcon />,
-    items: [
-      { title: "เว็บไซต์ทั้งหมด", url: NAV_ROUTES.SITES.LIST },
-      { title: "เพิ่มเว็บไซต์", url: NAV_ROUTES.SITES.NEW },
-    ],
-  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState<User | null>(null)
+  const [sites, setSites] = useState<{ id: string; name: string }[]>([])
+  const pathname = usePathname()
 
   useEffect(() => {
     setUser(authStore.getUser())
+    siteService.getAll().then((data) => {
+      setSites(data.map((s) => ({ id: s.id, name: s.name })))
+    }).catch(() => {})
   }, [])
 
   return (
@@ -71,7 +73,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={mainNavItems} />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>เว็บไซต์</SidebarGroupLabel>
+          <SidebarMenu>
+            {sites.map((site) => (
+              <SidebarMenuItem key={site.id}>
+                <SidebarMenuButton
+                  tooltip={site.name}
+                  data-active={pathname === NAV_ROUTES.SITES.DETAIL(site.id) || undefined}
+                  render={<Link href={NAV_ROUTES.SITES.DETAIL(site.id)} />}
+                >
+                  <GlobeIcon />
+                  <span>{site.name}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="เพิ่มเว็บไซต์"
+                render={<Link href={NAV_ROUTES.SITES.NEW} />}
+              >
+                <PlusIcon />
+                <span>เพิ่มเว็บไซต์</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser
