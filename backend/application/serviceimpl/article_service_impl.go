@@ -693,6 +693,14 @@ func (s *articleServiceImpl) InspectURL(ctx context.Context, id uuid.UUID) (map[
 	}
 
 	data, _ := resp["data"].(map[string]any)
+
+	// เก็บสถานะ index ลง DB
+	now := time.Now()
+	article.IndexStatus = getStr(data, "verdict")
+	article.IndexCoverage = getStr(data, "coverageState")
+	article.LastInspectedAt = &now
+	s.articleRepo.Update(ctx, article)
+
 	return data, nil
 }
 

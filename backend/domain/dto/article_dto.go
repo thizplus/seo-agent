@@ -45,10 +45,13 @@ type ArticleResponse struct {
 	Status          string    `json:"status"`
 	PublishStatus   string    `json:"publishStatus"`
 	PublishedURL     string    `json:"publishedUrl"`
-	FeaturedImageURL string   `json:"featuredImageUrl"`
-	WordCount        int      `json:"wordCount"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	FeaturedImageURL string     `json:"featuredImageUrl"`
+	WordCount        int        `json:"wordCount"`
+	IndexStatus      string     `json:"indexStatus"`
+	IndexCoverage    string     `json:"indexCoverage"`
+	LastInspectedAt  *time.Time `json:"lastInspectedAt"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	UpdatedAt        time.Time  `json:"updatedAt"`
 }
 
 type ArticleMetricsResponse struct {
@@ -78,8 +81,11 @@ func ArticleToResponse(a *models.Article) *ArticleResponse {
 		PublishedURL:     a.PublishedURL,
 		FeaturedImageURL: a.FeaturedImageURL,
 		WordCount:        a.WordCount,
-		CreatedAt:       a.CreatedAt,
-		UpdatedAt:       a.UpdatedAt,
+		IndexStatus:      a.IndexStatus,
+		IndexCoverage:    a.IndexCoverage,
+		LastInspectedAt:  a.LastInspectedAt,
+		CreatedAt:        a.CreatedAt,
+		UpdatedAt:        a.UpdatedAt,
 	}
 	if a.KeywordID != nil {
 		r.KeywordID = a.KeywordID.String()

@@ -15,6 +15,9 @@ export interface Article {
   featuredImageUrl: string
   cmsPostId: string
   wordCount: number
+  indexStatus: string
+  indexCoverage: string
+  lastInspectedAt: string | null
   createdAt: string
   updatedAt: string
 }

@@ -76,6 +76,14 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
                   {article.publishStatus === "published" && (
                     <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">เผยแพร่แล้ว</Badge>
                   )}
+                  {article.publishStatus === "published" && article.indexStatus && (
+                    <Badge
+                      variant={article.indexStatus === "PASS" ? "default" : "destructive"}
+                      className={article.indexStatus === "PASS" ? "bg-blue-600" : ""}
+                    >
+                      {article.indexStatus === "PASS" ? "Indexed" : "Not Indexed"}
+                    </Badge>
+                  )}
                 </div>
               </Link>
             ))}

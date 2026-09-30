@@ -392,6 +392,11 @@ func (s *Scheduler) runRankingTracker() {
 			if action != "" {
 				slog.Info("Ranking: Optimized", "article_id", article.ID, "action", action)
 			}
+
+			// เช็คสถานะ index (เก็บลง DB อัตโนมัติ)
+			if site.GSCSiteURL != "" {
+				s.articleService.InspectURL(ctx, article.ID)
+			}
 		}
 	}
 }
