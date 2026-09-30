@@ -19,7 +19,7 @@ import {
   AiSettingsCard,
   AnalyticsCard,
 } from "@/features/sites"
-import { LayoutDashboardIcon, FileTextIcon, KeyIcon, WrenchIcon, BarChart3Icon } from "lucide-react"
+import { BarChart3Icon, FileTextIcon, KeyIcon, SettingsIcon, WrenchIcon } from "lucide-react"
 
 export default function SiteDetailPage({
   params,
@@ -60,7 +60,7 @@ export default function SiteDetailPage({
         <Tabs defaultValue={0}>
           <TabsList className="mb-4">
             <TabsTrigger value={0}>
-              <LayoutDashboardIcon className="size-4" />
+              <BarChart3Icon className="size-4" />
               ภาพรวม
             </TabsTrigger>
             <TabsTrigger value={1}>
@@ -72,8 +72,8 @@ export default function SiteDetailPage({
               คีย์เวิร์ด
             </TabsTrigger>
             <TabsTrigger value={3}>
-              <BarChart3Icon className="size-4" />
-              วัดผล
+              <SettingsIcon className="size-4" />
+              จัดการ
             </TabsTrigger>
             <TabsTrigger value={4}>
               <WrenchIcon className="size-4" />
@@ -82,10 +82,7 @@ export default function SiteDetailPage({
           </TabsList>
 
           <TabsContent value={0} className="flex flex-col gap-6">
-            <SiteInfoCard site={site} />
-            <AiSettingsCard site={site} />
-            <PipelineCard siteId={id} />
-            <FocusQueueCard siteId={id} />
+            <AnalyticsCard siteId={id} hasGsc={site.hasGsc} />
           </TabsContent>
 
           <TabsContent value={1} className="flex flex-col gap-6">
@@ -99,7 +96,10 @@ export default function SiteDetailPage({
           </TabsContent>
 
           <TabsContent value={3} className="flex flex-col gap-6">
-            <AnalyticsCard siteId={id} hasGsc={site.hasGsc} />
+            <SiteInfoCard site={site} />
+            <AiSettingsCard site={site} />
+            <PipelineCard siteId={id} />
+            <FocusQueueCard siteId={id} />
           </TabsContent>
 
           <TabsContent value={4} className="flex flex-col gap-6">

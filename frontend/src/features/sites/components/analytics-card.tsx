@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useSiteAnalytics } from "../hooks"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,18 +27,25 @@ interface AnalyticsCardProps {
 export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
   const { data: analytics, isLoading, refetch } = useSiteAnalytics(siteId)
 
+  // Auto-fetch เมื่อมี GSC และยังไม่มีข้อมูล
+  useEffect(() => {
+    if (hasGsc && !analytics) {
+      refetch()
+    }
+  }, [hasGsc])
+
   if (!hasGsc) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3Icon className="size-4" />
-            วัดผล SEO
+            ภาพรวม SEO
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            กรุณาเชื่อมต่อ Google Search Console ก่อนใช้งาน
+            กรุณาเชื่อมต่อ Google Search Console ที่ tab &quot;เครื่องมือ&quot; เพื่อดูสถิติ SEO
           </p>
         </CardContent>
       </Card>
@@ -50,7 +58,7 @@ export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3Icon className="size-4" />
-            วัดผล SEO (28 วัน)
+            ภาพรวม SEO (28 วัน)
           </CardTitle>
           <Button
             size="sm"
@@ -63,15 +71,22 @@ export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
             ) : (
               <BarChart3Icon className="mr-1 size-4" />
             )}
-            {isLoading ? "กำลังโหลด..." : "ดึงข้อมูล"}
+            {isLoading ? "กำลังโหลด..." : "รีเฟรช"}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {!analytics ? (
-          <p className="text-sm text-muted-foreground">
-            กด &quot;ดึงข้อมูล&quot; เพื่อโหลดข้อมูลจาก Google Search Console
-          </p>
+          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+            {isLoading ? (
+              <>
+                <Loader2Icon className="mr-2 size-4 animate-spin" />
+                กำลังโหลดข้อมูลจาก Google Search Console...
+              </>
+            ) : (
+              "กด \"รีเฟรช\" เพื่อโหลดข้อมูลจาก Google Search Console"
+            )}
+          </div>
         ) : (
           <div className="flex flex-col gap-6">
             {/* Summary */}
