@@ -649,6 +649,25 @@ func (s *articleServiceImpl) GetVersions(ctx context.Context, id uuid.UUID) ([]m
 	return versions, err
 }
 
+func (s *articleServiceImpl) RequestIndexing(ctx context.Context, id uuid.UUID) (map[string]any, error) {
+	article, err := s.articleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if article.PublishedURL == "" {
+		return nil, fmt.Errorf("article not published yet")
+	}
+
+	resp, err := s.aiEngine.RequestIndexing(ctx, map[string]any{"url": article.PublishedURL})
+	if err != nil {
+		return nil, err
+	}
+
+	data, _ := resp["data"].(map[string]any)
+	slog.InfoContext(ctx, "Indexing requested", "article_id", id, "url", article.PublishedURL)
+	return data, nil
+}
+
 func (s *articleServiceImpl) saveMetricsHistory(ctx context.Context, articleID uuid.UUID, metrics map[string]any) {
 	clicks := getInt(metrics, "clicks")
 	impressions := getInt(metrics, "impressions")

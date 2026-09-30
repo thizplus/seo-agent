@@ -137,6 +137,11 @@ export const articleService = {
     return res.data.data
   },
 
+  async requestIndexing(id: string): Promise<Record<string, unknown>> {
+    const res = await apiClient.post(API_ROUTES.ARTICLES.REQUEST_INDEXING(id))
+    return res.data.data
+  },
+
   async publish(id: string): Promise<Article> {
     const res = await apiClient.post<{ data: Article }>(
       API_ROUTES.ARTICLES.PUBLISH(id)

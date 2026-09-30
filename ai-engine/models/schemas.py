@@ -210,6 +210,10 @@ class ScrapePageImagesRequest(BaseModel):
     page_url: str
 
 
+class RequestIndexingRequest(BaseModel):
+    url: str
+
+
 class HealthResponse(BaseModel):
     status: str
     service: str

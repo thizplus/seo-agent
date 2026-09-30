@@ -81,6 +81,7 @@ func Setup(app *fiber.App, c *di.Container) {
 	articles.Get("/:id", articleHandler.GetByID)
 	articles.Get("/:id/metrics", articleHandler.FetchMetrics)
 	articles.Get("/:id/metrics/history", articleHandler.GetMetricsHistory)
+	articles.Post("/:id/request-indexing", articleHandler.RequestIndexing)
 	articles.Get("/:id/versions", articleHandler.GetVersions)
 	articles.Get("/:id/images", articleHandler.GetImages)
 	articles.Post("/:id/optimize", articleHandler.RunOptimizer)

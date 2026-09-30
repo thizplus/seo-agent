@@ -27,6 +27,7 @@ from models.schemas import (
     ReviewArticleRequest,
     RewriteArticleRequest,
     ScrapePageImagesRequest,
+    RequestIndexingRequest,
     HealthResponse,
 )
 from pkg.di.container import Container
@@ -114,7 +115,51 @@ async def publish_article(req: PublishArticleRequest):
                 import logging
                 logging.getLogger("featured_image").error(f"[Featured] Exception: {e}", exc_info=True)
 
+        # Ping sitemap + request indexing (fire-and-forget)
+        published_url = result.get("publishedUrl", "")
+        if published_url:
+            import asyncio
+            asyncio.create_task(_post_publish_notify(req.wpUrl, published_url))
+
         return PublishArticleResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+async def _post_publish_notify(wp_url: str, published_url: str):
+    """Ping sitemap + request indexing หลัง publish (non-blocking)"""
+    import httpx as _httpx
+    import logging
+    _logger = logging.getLogger("post_publish")
+
+    # 1. Ping sitemap
+    sitemap_url = f"{wp_url.rstrip('/')}/wp-sitemap.xml"
+    try:
+        async with _httpx.AsyncClient(timeout=10) as client:
+            await client.get(f"https://www.google.com/ping?sitemap={sitemap_url}")
+            await client.get(f"https://www.bing.com/ping?sitemap={sitemap_url}")
+        _logger.info(f"[Ping] Sitemap pinged: {sitemap_url}")
+    except Exception as e:
+        _logger.warning(f"[Ping] Failed: {e}")
+
+    # 2. Request indexing via Google Indexing API
+    try:
+        from utils.indexing_client import IndexingClient
+        indexing = IndexingClient()
+        indexing.request_indexing(published_url)
+        _logger.info(f"[Indexing] Requested: {published_url}")
+    except Exception as e:
+        _logger.warning(f"[Indexing] Failed: {e}")
+
+
+@app.post("/request-indexing")
+async def request_indexing(req: RequestIndexingRequest):
+    """ขอให้ Google index URL (manual)"""
+    try:
+        from utils.indexing_client import IndexingClient
+        client = IndexingClient()
+        result = client.request_indexing(req.url)
+        return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -93,6 +93,12 @@ export function useFetchMetrics(id: string) {
   })
 }
 
+export function useRequestIndexing() {
+  return useMutation({
+    mutationFn: (id: string) => articleService.requestIndexing(id),
+  })
+}
+
 export function useMetricsHistory(id: string) {
   return useQuery({
     queryKey: [...articleKeys.metrics(id), "history"] as const,

@@ -8,6 +8,7 @@ import {
   useUpdateContent,
   useRegenerateArticle,
   useFetchMetrics,
+  useRequestIndexing,
   articleService,
   MarkdownEditor,
   MarkdownPreview,
@@ -57,6 +58,7 @@ import {
   PenLineIcon,
   RefreshCwIcon,
   SparklesIcon,
+  SearchCheckIcon,
 } from "lucide-react"
 
 export default function ArticleDetailPage({
@@ -69,6 +71,7 @@ export default function ArticleDetailPage({
   const publishArticle = usePublishArticle()
   const updateContent = useUpdateContent()
   const regenerateArticle = useRegenerateArticle()
+  const requestIndexing = useRequestIndexing()
 
   // Editor state
   const [title, setTitle] = useState("")
@@ -970,6 +973,21 @@ export default function ArticleDetailPage({
           <SparklesIcon className="mr-1 size-3.5" />
           ตรวจสอบ
         </Button>
+        {article.publishStatus === "published" && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => requestIndexing.mutate(id)}
+            disabled={requestIndexing.isPending}
+          >
+            {requestIndexing.isPending ? (
+              <Loader2Icon className="mr-1 size-3.5 animate-spin" />
+            ) : (
+              <SearchCheckIcon className="mr-1 size-3.5" />
+            )}
+            {requestIndexing.isPending ? "กำลังส่ง..." : "ขอ Index"}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"
