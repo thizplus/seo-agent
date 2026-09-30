@@ -894,9 +894,26 @@ export default function ArticleDetailPage({
                   </CardHeader>
                   <CardContent>
                     {!inspection ? (
-                      <p className="text-sm text-muted-foreground">
-                        กด &quot;ตรวจสอบ&quot; เพื่อเช็คว่า Google index บทความนี้แล้วหรือยัง
-                      </p>
+                      <div className="text-sm text-muted-foreground">
+                        {article.indexStatus ? (
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={article.indexStatus === "PASS" ? "default" : "destructive"}
+                              className={article.indexStatus === "PASS" ? "bg-green-600" : ""}
+                            >
+                              {article.indexStatus === "PASS" ? "อยู่ใน Google แล้ว" : "ยังไม่อยู่ใน Google"}
+                            </Badge>
+                            <span>{article.indexCoverage}</span>
+                            {article.lastInspectedAt && (
+                              <span className="text-xs">
+                                (เช็คล่าสุด {new Date(article.lastInspectedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short" })})
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p>กด &quot;ตรวจสอบ&quot; เพื่อเช็คว่า Google index บทความนี้แล้วหรือยัง</p>
+                        )}
+                      </div>
                     ) : (
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-3">
@@ -904,30 +921,55 @@ export default function ArticleDetailPage({
                             variant={inspection.verdict === "PASS" ? "default" : "destructive"}
                             className={inspection.verdict === "PASS" ? "bg-green-600" : ""}
                           >
-                            {inspection.verdict === "PASS" ? "Indexed" : inspection.verdict === "NEUTRAL" ? "ไม่ทราบ" : "ไม่ Index"}
+                            {inspection.verdict === "PASS"
+                              ? "อยู่ใน Google แล้ว"
+                              : inspection.verdict === "NEUTRAL"
+                                ? "รอตรวจสอบ"
+                                : "ยังไม่อยู่ใน Google"}
                           </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {inspection.coverageState}
-                          </span>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {inspection.coverageState === "Submitted and indexed"
+                            ? "บทความถูก index เรียบร้อย สามารถค้นหาเจอใน Google ได้แล้ว"
+                            : inspection.coverageState === "Crawled - currently not indexed"
+                              ? "Google เข้ามาอ่านแล้ว แต่ยังไม่ index — อาจต้องปรับปรุงเนื้อหาให้มีคุณภาพมากขึ้น"
+                              : inspection.coverageState === "Discovered - currently not indexed"
+                                ? "Google รู้จัก URL นี้แล้ว แต่ยังไม่ได้เข้ามาอ่าน — ลองกดปุ่ม \"ขอ Index\""
+                                : inspection.coverageState === "URL is unknown to Google"
+                                  ? "Google ยังไม่รู้จัก URL นี้เลย — กดปุ่ม \"ขอ Index\" เพื่อแจ้ง Google"
+                                  : inspection.coverageState || "ไม่สามารถตรวจสอบได้"}
+                        </p>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Crawled As: </span>
-                            {inspection.crawledAs || "-"}
+                            <span className="text-muted-foreground">ประเภท Bot: </span>
+                            {inspection.crawledAs === "DESKTOP" ? "Desktop"
+                              : inspection.crawledAs === "MOBILE" ? "Mobile"
+                              : inspection.crawledAs || "ยังไม่เคย crawl"}
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Page Fetch: </span>
-                            {inspection.pageFetchState || "-"}
+                            <span className="text-muted-foreground">การเข้าถึง: </span>
+                            {inspection.pageFetchState === "SUCCESSFUL" ? "สำเร็จ"
+                              : inspection.pageFetchState === "SOFT_404" ? "Soft 404"
+                              : inspection.pageFetchState === "BLOCKED_ROBOTS_TXT" ? "ถูกบล็อกโดย robots.txt"
+                              : inspection.pageFetchState === "NOT_FOUND" ? "ไม่พบหน้า (404)"
+                              : inspection.pageFetchState === "SERVER_ERROR" ? "Server Error"
+                              : inspection.pageFetchState === "PAGE_FETCH_STATE_UNSPECIFIED" ? "ยังไม่เคยเข้าถึง"
+                              : inspection.pageFetchState || "ยังไม่เคยเข้าถึง"}
                           </div>
                           <div>
                             <span className="text-muted-foreground">Robots.txt: </span>
-                            {inspection.robotsTxtState || "-"}
+                            {inspection.robotsTxtState === "ALLOWED" ? "อนุญาต"
+                              : inspection.robotsTxtState === "DISALLOWED" ? "ถูกบล็อก"
+                              : inspection.robotsTxtState === "ROBOTS_TXT_STATE_UNSPECIFIED" ? "ยังไม่ตรวจสอบ"
+                              : inspection.robotsTxtState || "ยังไม่ตรวจสอบ"}
                           </div>
                           <div>
                             <span className="text-muted-foreground">Crawl ล่าสุด: </span>
                             {inspection.lastCrawlTime
-                              ? new Date(inspection.lastCrawlTime).toLocaleDateString("th-TH")
-                              : "-"}
+                              ? new Date(inspection.lastCrawlTime).toLocaleDateString("th-TH", {
+                                  day: "numeric", month: "short", year: "numeric"
+                                })
+                              : "ยังไม่เคย"}
                           </div>
                         </div>
                       </div>

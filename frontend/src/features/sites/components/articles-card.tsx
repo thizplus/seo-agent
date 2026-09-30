@@ -81,7 +81,7 @@ export function ArticlesCard({ siteId }: ArticlesCardProps) {
                       variant={article.indexStatus === "PASS" ? "default" : "destructive"}
                       className={article.indexStatus === "PASS" ? "bg-blue-600" : ""}
                     >
-                      {article.indexStatus === "PASS" ? "Indexed" : "Not Indexed"}
+                      {article.indexStatus === "PASS" ? "อยู่ใน Google" : "ยังไม่ Index"}
                     </Badge>
                   )}
                 </div>
