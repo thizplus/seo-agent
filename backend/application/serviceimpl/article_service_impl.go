@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math"
 	"math/rand"
 	"time"
 
@@ -749,7 +750,7 @@ func (s *articleServiceImpl) GetMetricsHistory(ctx context.Context, id uuid.UUID
 	return history, err
 }
 
-func (s *articleServiceImpl) GetSiteAnalyticsSummary(ctx context.Context, siteID uuid.UUID) (map[string]any, error) {
+func (s *articleServiceImpl) GetSiteAnalyticsSummary(ctx context.Context, siteID uuid.UUID, days int, compare bool) (map[string]any, error) {
 	site, err := s.siteRepo.GetByID(ctx, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("site not found: %w", err)
@@ -758,16 +759,35 @@ func (s *articleServiceImpl) GetSiteAnalyticsSummary(ctx context.Context, siteID
 		return nil, fmt.Errorf("GSC not connected")
 	}
 
-	// ดึง metrics ทั้ง site จาก ai-engine
+	// ดึง metrics ทั้ง site จาก ai-engine (current period)
 	resp, err := s.aiEngine.FetchSiteMetrics(ctx, map[string]any{
 		"gsc_refresh_token": site.GSCRefreshToken,
 		"gsc_site_url":      site.GSCSiteURL,
-		"days":              28,
+		"days":              days,
 	})
 	if err != nil {
 		return nil, err
 	}
 	data, _ := resp["data"].(map[string]any)
+
+	// ดึง previous period สำหรับ compare
+	var comparison map[string]any
+	if compare && days <= 240 {
+		endDate := time.Now().AddDate(0, 0, -3-days)
+		startDate := endDate.AddDate(0, 0, -days)
+		prevResp, prevErr := s.aiEngine.FetchSiteMetrics(ctx, map[string]any{
+			"gsc_refresh_token": site.GSCRefreshToken,
+			"gsc_site_url":      site.GSCSiteURL,
+			"start_date":        startDate.Format("2006-01-02"),
+			"end_date":          endDate.Format("2006-01-02"),
+		})
+		if prevErr == nil {
+			prevData, _ := prevResp["data"].(map[string]any)
+			if prevData != nil {
+				comparison = calcComparison(data, prevData)
+			}
+		}
+	}
 
 	// ดึง published articles จาก DB เพื่อ match กับ pages
 	articles, err := s.articleRepo.GetBySiteID(ctx, siteID)
@@ -834,18 +854,61 @@ func (s *articleServiceImpl) GetSiteAnalyticsSummary(ctx context.Context, siteID
 		lowCtrArticles = lowCtrArticles[:5]
 	}
 
-	return map[string]any{
-		"totalClicks":      data["totalClicks"],
-		"totalImpressions": data["totalImpressions"],
-		"avgCtr":           data["avgCtr"],
-		"avgPosition":      data["avgPosition"],
-		"totalArticles":    len(articles),
+	result := map[string]any{
+		"totalClicks":       data["totalClicks"],
+		"totalImpressions":  data["totalImpressions"],
+		"avgCtr":            data["avgCtr"],
+		"avgPosition":       data["avgPosition"],
+		"totalArticles":     len(articles),
 		"publishedArticles": publishedCount,
-		"indexedArticles":  indexedCount,
-		"topArticles":      topArticles,
-		"lowCtrArticles":   lowCtrArticles,
-		"topQueries":       data["topQueries"],
-	}, nil
+		"indexedArticles":   indexedCount,
+		"topArticles":       topArticles,
+		"lowCtrArticles":    lowCtrArticles,
+		"topQueries":        data["topQueries"],
+		"days":              days,
+	}
+	if comparison != nil {
+		result["comparison"] = comparison
+	}
+	return result, nil
+}
+
+func calcComparison(current, previous map[string]any) map[string]any {
+	getFloat := func(m map[string]any, key string) float64 {
+		if v, ok := m[key].(float64); ok {
+			return v
+		}
+		return 0
+	}
+	pctChange := func(cur, prev float64) float64 {
+		if prev == 0 {
+			if cur > 0 {
+				return 100
+			}
+			return 0
+		}
+		return (cur - prev) / prev * 100
+	}
+
+	curClicks := getFloat(current, "totalClicks")
+	prevClicks := getFloat(previous, "totalClicks")
+	curImpressions := getFloat(current, "totalImpressions")
+	prevImpressions := getFloat(previous, "totalImpressions")
+	curCtr := getFloat(current, "avgCtr")
+	prevCtr := getFloat(previous, "avgCtr")
+	curPos := getFloat(current, "avgPosition")
+	prevPos := getFloat(previous, "avgPosition")
+
+	return map[string]any{
+		"clicksChange":       math.Round(pctChange(curClicks, prevClicks)*10) / 10,
+		"impressionsChange":  math.Round(pctChange(curImpressions, prevImpressions)*10) / 10,
+		"ctrChange":          math.Round((curCtr-prevCtr)*10000) / 10000,
+		"positionChange":     math.Round((curPos-prevPos)*10) / 10,
+		"previousClicks":     int(prevClicks),
+		"previousImpressions": int(prevImpressions),
+		"previousCtr":        prevCtr,
+		"previousPosition":   prevPos,
+	}
 }
 
 func getStr(m map[string]any, key string) string {

@@ -75,9 +75,14 @@ class GSCOAuthAdapter(SearchConsolePort):
             "queries": queries,
         }
 
-    def get_site_metrics(self, days: int = 28) -> dict:
-        end_date = datetime.now().date() - timedelta(days=3)
-        start_date = end_date - timedelta(days=days)
+    def get_site_metrics(self, days: int = 28, start_date_str: str = None, end_date_str: str = None) -> dict:
+        if start_date_str and end_date_str:
+            from datetime import date as date_type
+            start_date = date_type.fromisoformat(start_date_str)
+            end_date = date_type.fromisoformat(end_date_str)
+        else:
+            end_date = datetime.now().date() - timedelta(days=3)
+            start_date = end_date - timedelta(days=days)
 
         body = {
             "startDate": start_date.isoformat(),

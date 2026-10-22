@@ -100,6 +100,17 @@ export interface FocusQueueStatus {
   nextKeyword?: { priority: number; primaryKeyword: string; secondaryKeywords: string }
 }
 
+export interface AnalyticsComparison {
+  clicksChange: number
+  impressionsChange: number
+  ctrChange: number
+  positionChange: number
+  previousClicks: number
+  previousImpressions: number
+  previousCtr: number
+  previousPosition: number
+}
+
 export interface SiteAnalyticsSummary {
   totalClicks: number
   totalImpressions: number
@@ -111,6 +122,8 @@ export interface SiteAnalyticsSummary {
   topArticles: SiteArticleMetric[]
   lowCtrArticles: SiteArticleMetric[]
   topQueries: SiteQuery[]
+  days: number
+  comparison?: AnalyticsComparison
 }
 
 export interface SiteArticleMetric {

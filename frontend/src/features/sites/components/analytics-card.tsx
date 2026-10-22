@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useSiteAnalytics } from "../hooks"
+import type { AnalyticsComparison } from "../types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,13 +12,65 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   BarChart3Icon,
   Loader2Icon,
   TrendingUpIcon,
+  TrendingDownIcon,
   AlertTriangleIcon,
   SearchIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  MinusIcon,
 } from "lucide-react"
 import Link from "next/link"
+
+const PERIOD_OPTIONS = [
+  { value: "7", label: "7 วัน" },
+  { value: "28", label: "28 วัน" },
+  { value: "90", label: "3 เดือน" },
+  { value: "180", label: "6 เดือน" },
+  { value: "480", label: "16 เดือน" },
+] as const
+
+function getPeriodLabel(days: number): string {
+  return PERIOD_OPTIONS.find((p) => p.value === String(days))?.label ?? `${days} วัน`
+}
+
+function ChangeIndicator({
+  value,
+  suffix = "%",
+  invertColor = false,
+}: {
+  value: number
+  suffix?: string
+  invertColor?: boolean // position: ลดลง = ดี
+}) {
+  if (value === 0) {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+        <MinusIcon className="size-3" />0{suffix}
+      </span>
+    )
+  }
+  const isPositive = value > 0
+  const isGood = invertColor ? !isPositive : isPositive
+  const color = isGood ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+  const Icon = isPositive ? ArrowUpIcon : ArrowDownIcon
+
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${color}`}>
+      <Icon className="size-3" />
+      {isPositive ? "+" : ""}{value}{suffix}
+    </span>
+  )
+}
 
 interface AnalyticsCardProps {
   siteId: string
@@ -25,14 +78,21 @@ interface AnalyticsCardProps {
 }
 
 export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
-  const { data: analytics, isLoading, refetch } = useSiteAnalytics(siteId)
+  const [days, setDays] = useState(28)
+  const { data: analytics, isLoading, refetch } = useSiteAnalytics(siteId, days)
 
-  // Auto-fetch เมื่อมี GSC และยังไม่มีข้อมูล
   useEffect(() => {
     if (hasGsc && !analytics) {
       refetch()
     }
   }, [hasGsc])
+
+  // เปลี่ยนช่วงเวลา → refetch
+  useEffect(() => {
+    if (hasGsc) {
+      refetch()
+    }
+  }, [days])
 
   if (!hasGsc) {
     return (
@@ -52,28 +112,49 @@ export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
     )
   }
 
+  const cmp = analytics?.comparison
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3Icon className="size-4" />
-            ภาพรวม SEO (28 วัน)
+            ภาพรวม SEO
           </CardTitle>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2Icon className="mr-1 size-4 animate-spin" />
-            ) : (
-              <BarChart3Icon className="mr-1 size-4" />
-            )}
-            {isLoading ? "กำลังโหลด..." : "รีเฟรช"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+              <SelectTrigger className="h-8 w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2Icon className="mr-1 size-4 animate-spin" />
+              ) : (
+                <BarChart3Icon className="mr-1 size-4" />
+              )}
+              {isLoading ? "กำลังโหลด..." : "รีเฟรช"}
+            </Button>
+          </div>
         </div>
+        {cmp && (
+          <p className="text-xs text-muted-foreground mt-1">
+            เทียบกับ {getPeriodLabel(days)} ก่อนหน้า
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         {!analytics ? (
@@ -91,22 +172,28 @@ export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
           <div className="flex flex-col gap-6">
             {/* Summary */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{analytics.totalClicks.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">คลิก</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{analytics.totalImpressions.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">แสดงผล</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{(analytics.avgCtr * 100).toFixed(1)}%</div>
-                <div className="text-sm text-muted-foreground">CTR เฉลี่ย</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{analytics.avgPosition || "-"}</div>
-                <div className="text-sm text-muted-foreground">อันดับเฉลี่ย</div>
-              </div>
+              <SummaryItem
+                value={analytics.totalClicks.toLocaleString()}
+                label="คลิก"
+                change={cmp?.clicksChange}
+              />
+              <SummaryItem
+                value={analytics.totalImpressions.toLocaleString()}
+                label="แสดงผล"
+                change={cmp?.impressionsChange}
+              />
+              <SummaryItem
+                value={`${(analytics.avgCtr * 100).toFixed(1)}%`}
+                label="CTR เฉลี่ย"
+                change={cmp ? Math.round(cmp.ctrChange * 10000) / 100 : undefined}
+                changeSuffix="pp"
+              />
+              <SummaryItem
+                value={analytics.avgPosition ? String(analytics.avgPosition) : "-"}
+                label="อันดับเฉลี่ย"
+                change={cmp?.positionChange}
+                invertColor
+              />
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {analytics.indexedArticles}/{analytics.publishedArticles}
@@ -230,5 +317,31 @@ export function AnalyticsCard({ siteId, hasGsc }: AnalyticsCardProps) {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function SummaryItem({
+  value,
+  label,
+  change,
+  changeSuffix = "%",
+  invertColor = false,
+}: {
+  value: string
+  label: string
+  change?: number
+  changeSuffix?: string
+  invertColor?: boolean
+}) {
+  return (
+    <div className="text-center">
+      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
+      {change !== undefined && (
+        <div className="mt-1">
+          <ChangeIndicator value={change} suffix={changeSuffix} invertColor={invertColor} />
+        </div>
+      )}
+    </div>
   )
 }

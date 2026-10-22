@@ -128,8 +128,10 @@ export const siteService = {
     await apiClient.post(API_ROUTES.SITES.FOCUS_QUEUE_RESTORE(id, queueId))
   },
 
-  async getAnalyticsSummary(id: string): Promise<SiteAnalyticsSummary> {
-    const res = await apiClient.get<{ data: SiteAnalyticsSummary }>(API_ROUTES.SITES.ANALYTICS_SUMMARY(id))
+  async getAnalyticsSummary(id: string, days: number = 28, compare: boolean = true): Promise<SiteAnalyticsSummary> {
+    const res = await apiClient.get<{ data: SiteAnalyticsSummary }>(API_ROUTES.SITES.ANALYTICS_SUMMARY(id), {
+      params: { days, compare },
+    })
     return res.data.data
   },
 }

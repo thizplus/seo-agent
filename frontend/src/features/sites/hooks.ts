@@ -6,7 +6,7 @@ export const siteKeys = {
   all: ["sites"] as const,
   list: () => [...siteKeys.all, "list"] as const,
   detail: (id: string) => [...siteKeys.all, "detail", id] as const,
-  analytics: (id: string) => [...siteKeys.all, "analytics", id] as const,
+  analytics: (id: string, days?: number) => [...siteKeys.all, "analytics", id, days] as const,
 }
 
 export function useSiteList() {
@@ -250,10 +250,10 @@ export function useRestoreFocusQueueItem(siteId: string) {
 
 // --- Analytics ---
 
-export function useSiteAnalytics(siteId: string) {
+export function useSiteAnalytics(siteId: string, days: number = 28) {
   return useQuery({
-    queryKey: siteKeys.analytics(siteId),
-    queryFn: () => siteService.getAnalyticsSummary(siteId),
+    queryKey: siteKeys.analytics(siteId, days),
+    queryFn: () => siteService.getAnalyticsSummary(siteId, days),
     enabled: false,
   })
 }

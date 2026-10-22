@@ -253,7 +253,9 @@ async def fetch_site_metrics(req: FetchSiteMetricsRequest):
         gsc = container.create_search_console(
             req.gsc_refresh_token, req.gsc_site_url, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
         )
-        return {"success": True, "data": gsc.get_site_metrics(days=req.days)}
+        return {"success": True, "data": gsc.get_site_metrics(
+            days=req.days, start_date_str=req.start_date, end_date_str=req.end_date,
+        )}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

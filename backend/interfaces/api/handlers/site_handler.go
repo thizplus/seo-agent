@@ -177,7 +177,12 @@ func (h *SiteHandler) AnalyticsSummary(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.BadRequestResponse(c, "Invalid site ID")
 	}
-	data, err := h.articleService.GetSiteAnalyticsSummary(c.UserContext(), id)
+	days := c.QueryInt("days", 28)
+	if days < 1 || days > 480 {
+		days = 28
+	}
+	compare := c.Query("compare", "true") == "true"
+	data, err := h.articleService.GetSiteAnalyticsSummary(c.UserContext(), id, days, compare)
 	if err != nil {
 		return utils.BadRequestResponse(c, err.Error())
 	}
