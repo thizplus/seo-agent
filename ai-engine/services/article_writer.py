@@ -1,9 +1,15 @@
 import json
+import logging
 import re
+
+import httpx
+from bs4 import BeautifulSoup
 
 from domain.ports.llm_port import LLMPort
 from domain.ports.serp_port import SERPPort
 from services.skill_loader import SkillLoader, SkillRouter
+
+logger = logging.getLogger(__name__)
 
 
 class ArticleWriter:
@@ -13,6 +19,28 @@ class ArticleWriter:
         self.llm = llm
         self.skill_router = SkillRouter(skill_loader)
         self.serp = serp
+
+    async def _fetch_reference(self, url: str) -> dict | None:
+        """อ่าน URL อ้างอิง → ได้ title + headings + เนื้อหาย่อ"""
+        try:
+            async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+                resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+                resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            # ลบ nav, footer, sidebar, script, style
+            for tag in soup.find_all(["nav", "footer", "aside", "script", "style", "header"]):
+                tag.decompose()
+            title = soup.title.string.strip() if soup.title and soup.title.string else url
+            headings = [h.get_text(strip=True) for h in soup.find_all(["h2", "h3"])[:10]]
+            # เอาเนื้อหาจาก article/main หรือ body
+            main = soup.find("article") or soup.find("main") or soup.find("body")
+            text = main.get_text(separator="\n", strip=True) if main else ""
+            # ตัดให้ไม่เกิน 4,000 ตัวอักษร
+            text = text[:4000]
+            return {"url": url, "title": title, "headings": headings, "content": text}
+        except Exception as e:
+            logger.warning(f"Failed to fetch reference URL {url}: {e}")
+            return None
 
     async def generate(
         self,
@@ -26,6 +54,7 @@ class ArticleWriter:
         custom_title: str = "",
         content_guide: str = "",
         writing_tone: str = "",
+        reference_urls: list[str] = None,
     ) -> dict:
         serp_data = await self.serp.analyze(keyword)
         skill_context = self.skill_router.get_context("article_writing")
@@ -56,6 +85,24 @@ class ArticleWriter:
 - ใช้ anchor text ที่เกี่ยวข้องกับ keyword หลัก "{keyword}"
 - ใส่ลิงก์อย่างน้อย 1-2 จุดในเนื้อหา"""
 
+        # อ่าน reference URLs (ถ้ามี)
+        reference_section = ""
+        if reference_urls:
+            refs = []
+            for url in reference_urls[:3]:
+                ref = await self._fetch_reference(url)
+                if ref:
+                    headings_str = ", ".join(ref["headings"][:8]) if ref["headings"] else "N/A"
+                    refs.append(f"""### {ref['title']} ({ref['url']})
+หัวข้อ: {headings_str}
+เนื้อหาย่อ: {ref['content'][:2000]}""")
+            if refs:
+                reference_section = f"""
+## บทความอ้างอิง (ใช้เป็นแนวทางโครงสร้างและประเด็น — ห้ามคัดลอกประโยค)
+{''.join(refs)}
+- เขียนใหม่ด้วยภาษาของเราเอง ครอบคลุมประเด็นสำคัญ + เพิ่มมุมที่บทความอ้างอิงยังไม่มี
+"""
+
         article_prompt = f"""เขียนบทความ SEO สำหรับ keyword: "{keyword}"
 
 ## ข้อมูลเว็บไซต์
@@ -69,6 +116,7 @@ class ArticleWriter:
 - คู่แข่ง Top 5: {', '.join(r.get('title','')[:30] for r in serp_data.get('results', [])[:5]) or 'N/A'}
 {secondary_section}
 {pillar_section}
+{reference_section}
 {f"""
 ## หัวข้อบทความที่กำหนด (ใช้หัวข้อนี้เป็น H1)
 {custom_title}

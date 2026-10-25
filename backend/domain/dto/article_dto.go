@@ -19,6 +19,14 @@ type GenerateArticleRequest struct {
 	Source            string   `json:"source,omitempty"` // queue | keyword | manual
 }
 
+type RegenerateArticleRequest struct {
+	UseCurrentTitle bool     `json:"useCurrentTitle"`
+	CustomTitle     string   `json:"customTitle,omitempty"`
+	ContentGuide    string   `json:"contentGuide,omitempty"`
+	WritingTone     string   `json:"writingTone,omitempty"`
+	ReferenceURLs   []string `json:"referenceUrls,omitempty"` // max 3
+}
+
 type UpdateContentRequest struct {
 	Title           string `json:"title"`
 	Slug            string `json:"slug"`

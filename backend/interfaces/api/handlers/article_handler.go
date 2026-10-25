@@ -56,7 +56,16 @@ func (h *ArticleHandler) Regenerate(c *fiber.Ctx) error {
 		return utils.BadRequestResponse(c, "Invalid article ID")
 	}
 
-	article, err := h.articleService.Regenerate(c.UserContext(), id)
+	// Parse body (body ว่างก็ใช้ได้ — backward compatible)
+	var req dto.RegenerateArticleRequest
+	c.BodyParser(&req)
+
+	// จำกัด reference URLs ไม่เกิน 3
+	if len(req.ReferenceURLs) > 3 {
+		req.ReferenceURLs = req.ReferenceURLs[:3]
+	}
+
+	article, err := h.articleService.Regenerate(c.UserContext(), id, &req)
 	if err != nil {
 		slog.Error("Regenerate article failed", "error", err)
 		return utils.BadRequestResponse(c, err.Error())

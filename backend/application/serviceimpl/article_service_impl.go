@@ -135,7 +135,7 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 	return article, nil
 }
 
-func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*models.Article, error) {
+func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID, req *dto.RegenerateArticleRequest) (*models.Article, error) {
 	article, err := s.articleRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("article not found: %w", err)
@@ -169,7 +169,25 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 		"llm_provider": site.LLMProvider, "llm_api_key": site.LLMApiKey,
 	}
 
-	// ดึงข้อมูลจาก Focus Queue (ถ้ามี)
+	// ลำดับ: ค่าจาก dialog → Focus Queue → Site default
+
+	// 1. ค่าจาก dialog (ถ้ามี)
+	if req.UseCurrentTitle {
+		aiReq["custom_title"] = article.Title
+	} else if req.CustomTitle != "" {
+		aiReq["custom_title"] = req.CustomTitle
+	}
+	if req.ContentGuide != "" {
+		aiReq["content_guide"] = req.ContentGuide
+	}
+	if req.WritingTone != "" {
+		aiReq["writing_tone"] = req.WritingTone
+	}
+	if len(req.ReferenceURLs) > 0 {
+		aiReq["reference_urls"] = req.ReferenceURLs
+	}
+
+	// 2. เติมค่าที่ยังไม่ได้ตั้งจาก Focus Queue / Site
 	focusItem, _ := s.focusQueueRepo.GetByArticleID(ctx, id)
 	if focusItem != nil {
 		if focusItem.SecondaryKeywords != "" {
@@ -178,26 +196,28 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 		if focusItem.PillarURL != "" {
 			aiReq["pillar_url"] = focusItem.PillarURL
 		}
-		if focusItem.CustomTitle != "" {
+		if _, ok := aiReq["custom_title"]; !ok && focusItem.CustomTitle != "" {
 			aiReq["custom_title"] = focusItem.CustomTitle
 		}
-		// ลำดับ: Focus Queue override → Site default
-		if focusItem.OverrideGuide != "" {
-			aiReq["content_guide"] = focusItem.OverrideGuide
-		} else if site.ContentGuide != "" {
-			aiReq["content_guide"] = site.ContentGuide
+		if _, ok := aiReq["content_guide"]; !ok {
+			if focusItem.OverrideGuide != "" {
+				aiReq["content_guide"] = focusItem.OverrideGuide
+			} else if site.ContentGuide != "" {
+				aiReq["content_guide"] = site.ContentGuide
+			}
 		}
-		if focusItem.OverrideTone != "" {
-			aiReq["writing_tone"] = focusItem.OverrideTone
-		} else if site.WritingTone != "" {
-			aiReq["writing_tone"] = site.WritingTone
+		if _, ok := aiReq["writing_tone"]; !ok {
+			if focusItem.OverrideTone != "" {
+				aiReq["writing_tone"] = focusItem.OverrideTone
+			} else if site.WritingTone != "" {
+				aiReq["writing_tone"] = site.WritingTone
+			}
 		}
 	} else {
-		// ไม่มี Focus Queue → ใช้ค่าจาก Site
-		if site.ContentGuide != "" {
+		if _, ok := aiReq["content_guide"]; !ok && site.ContentGuide != "" {
 			aiReq["content_guide"] = site.ContentGuide
 		}
-		if site.WritingTone != "" {
+		if _, ok := aiReq["writing_tone"]; !ok && site.WritingTone != "" {
 			aiReq["writing_tone"] = site.WritingTone
 		}
 	}

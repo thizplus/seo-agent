@@ -72,6 +72,7 @@ async def generate_article(req: GenerateArticleRequest):
         custom_title=req.custom_title,
         content_guide=req.content_guide,
         writing_tone=req.writing_tone,
+        reference_urls=req.reference_urls or None,
     )
     return GenerateArticleResponse(**result)
 

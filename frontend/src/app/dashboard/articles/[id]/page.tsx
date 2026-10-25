@@ -17,8 +17,10 @@ import {
   VideoInsertDialog,
   ReviewDialog,
   GalleryInsertDialog,
+  RegenerateDialog,
   MetricsChart,
 } from "@/features/articles"
+import type { RegenerateOptions } from "@/features/articles"
 import type { MarkdownEditorRef } from "@/features/articles"
 import { NAV_ROUTES } from "@/constants/nav"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -373,10 +375,11 @@ export default function ArticleDetailPage({
     }
   }
 
-  const handleRegenerate = () => {
-    if (confirm("สร้างบทความใหม่? เนื้อหาเดิมจะถูกบันทึกเป็น version ก่อนหน้า")) {
-      regenerateArticle.mutate(id)
-    }
+  const [regenDialogOpen, setRegenDialogOpen] = useState(false)
+  const handleRegenerate = (options: RegenerateOptions) => {
+    regenerateArticle.mutate({ id, options }, {
+      onSuccess: () => setRegenDialogOpen(false),
+    })
   }
 
   // --- Loading / Not found ---
@@ -1103,7 +1106,7 @@ export default function ArticleDetailPage({
         <Button
           size="sm"
           variant="outline"
-          onClick={handleRegenerate}
+          onClick={() => setRegenDialogOpen(true)}
           disabled={regenerateArticle.isPending}
         >
           {regenerateArticle.isPending ? (
@@ -1113,6 +1116,13 @@ export default function ArticleDetailPage({
           )}
           {regenerateArticle.isPending ? "กำลังสร้าง..." : "สร้างใหม่"}
         </Button>
+        <RegenerateDialog
+          open={regenDialogOpen}
+          onOpenChange={setRegenDialogOpen}
+          articleTitle={title}
+          isPending={regenerateArticle.isPending}
+          onRegenerate={handleRegenerate}
+        />
         <div className="flex-1" />
         <Button
           size="sm"

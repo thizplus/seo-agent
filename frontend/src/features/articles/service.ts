@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client"
 import { API_ROUTES } from "@/constants/api-routes"
-import type { Article, ArticleMetrics, MetricsHistoryPoint, URLInspectionResult, GenerateArticleRequest } from "./types"
+import type { Article, ArticleMetrics, MetricsHistoryPoint, URLInspectionResult, GenerateArticleRequest, RegenerateOptions } from "./types"
 
 export const articleService = {
   async getBySiteId(siteId: string): Promise<Article[]> {
@@ -63,9 +63,10 @@ export const articleService = {
     return res.data.data
   },
 
-  async regenerate(id: string): Promise<Article> {
+  async regenerate(id: string, options?: RegenerateOptions): Promise<Article> {
     const res = await apiClient.post<{ data: Article }>(
-      API_ROUTES.ARTICLES.REGENERATE(id)
+      API_ROUTES.ARTICLES.REGENERATE(id),
+      options || {}
     )
     return res.data.data
   },

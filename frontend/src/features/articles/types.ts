@@ -29,6 +29,14 @@ export interface EEATScore {
   trust: number
 }
 
+export interface RegenerateOptions {
+  useCurrentTitle?: boolean
+  customTitle?: string
+  contentGuide?: string
+  writingTone?: string
+  referenceUrls?: string[]
+}
+
 export interface GenerateArticleRequest {
   siteId: string
   keywordId: string

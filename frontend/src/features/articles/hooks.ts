@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { articleService } from "./service"
-import type { GenerateArticleRequest } from "./types"
+import type { GenerateArticleRequest, RegenerateOptions } from "./types"
 
 export const articleKeys = {
   all: ["articles"] as const,
@@ -58,7 +58,7 @@ export function useUpdateContent() {
 export function useRegenerateArticle() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => articleService.regenerate(id),
+    mutationFn: ({ id, options }: { id: string; options?: RegenerateOptions }) => articleService.regenerate(id, options),
     onSuccess: (article) => {
       queryClient.invalidateQueries({
         queryKey: articleKeys.detail(article.id),

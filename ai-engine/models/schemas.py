@@ -13,6 +13,7 @@ class GenerateArticleRequest(BaseModel):
     custom_title: str = ""
     content_guide: str = ""
     writing_tone: str = ""
+    reference_urls: list[str] = []
     llm_provider: str = "gemini"
     llm_api_key: str = ""
 
