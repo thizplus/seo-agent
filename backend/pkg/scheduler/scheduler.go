@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ type Scheduler struct {
 	analysisRepo   repositories.PageAnalysisRepository
 	serpRepo       repositories.SerpHistoryRepository
 	focusQueueRepo repositories.FocusQueueRepository
+	settingRepo    repositories.SystemSettingRepository
 	aiEngine       ports.AIEnginePort
 }
 
@@ -42,6 +44,7 @@ func New(
 	analysisRepo repositories.PageAnalysisRepository,
 	serpRepo repositories.SerpHistoryRepository,
 	focusQueueRepo repositories.FocusQueueRepository,
+	settingRepo repositories.SystemSettingRepository,
 	aiEngine ports.AIEnginePort,
 ) *Scheduler {
 	return &Scheduler{
@@ -56,6 +59,7 @@ func New(
 		analysisRepo:   analysisRepo,
 		serpRepo:       serpRepo,
 		focusQueueRepo: focusQueueRepo,
+		settingRepo:    settingRepo,
 		aiEngine:       aiEngine,
 	}
 }
@@ -77,6 +81,11 @@ func (s *Scheduler) Start() {
 	s.cron.AddFunc("0 */12 * * *", func() {
 		slog.Info("Scheduler: Running ranking tracker (Step 4)")
 		s.runRankingTracker()
+	})
+
+	// Auto Publish: ทุกชั่วโมง เช็คว่าถึงเวลา publish หรือยัง
+	s.cron.AddFunc("0 * * * *", func() {
+		s.runAutoPublish()
 	})
 
 	s.cron.Start()
@@ -281,6 +290,7 @@ func (s *Scheduler) generateFromFocusQueue(ctx context.Context, site models.Site
 		CustomTitle:  item.CustomTitle,
 		ContentGuide: firstNonEmpty(item.OverrideGuide, site.ContentGuide),
 		WritingTone:  firstNonEmpty(item.OverrideTone, site.WritingTone),
+		Source:       "queue",
 	})
 
 	if err != nil {
@@ -338,6 +348,7 @@ func (s *Scheduler) generateFromKeywords(ctx context.Context, site models.Site) 
 			KeywordID:    kw.ID.String(),
 			ContentGuide: site.ContentGuide,
 			WritingTone:  site.WritingTone,
+			Source:       "keyword",
 		})
 		if err != nil {
 			slog.Warn("ContentGen: Failed", "keyword", kw.Keyword, "error", err)
@@ -401,6 +412,99 @@ func (s *Scheduler) runRankingTracker() {
 				s.articleService.InspectURL(ctx, article.ID)
 			}
 		}
+	}
+}
+
+// Auto Publish — เช็คตั้งค่า → publish บทความจากคิวที่เป็น draft
+func (s *Scheduler) runAutoPublish() {
+	ctx := context.Background()
+
+	// อ่านตั้งค่า auto publish
+	setting, err := s.settingRepo.Get(ctx, "auto_publish")
+	if err != nil {
+		return
+	}
+
+	var config struct {
+		Enabled bool   `json:"enabled"`
+		Days    []int  `json:"days"`
+		Time    string `json:"time"`
+	}
+	if err := json.Unmarshal([]byte(setting.Value), &config); err != nil || !config.Enabled {
+		return
+	}
+
+	now := time.Now()
+	weekday := int(now.Weekday()) // 0=Sunday, 6=Saturday
+
+	// เช็คว่าวันนี้เปิด auto publish ไหม
+	dayMatch := false
+	for _, d := range config.Days {
+		if d == weekday {
+			dayMatch = true
+			break
+		}
+	}
+	if !dayMatch {
+		return
+	}
+
+	// เช็คว่าตรงเวลาที่ตั้งไว้ไหม (เช็คเฉพาะชั่วโมง เพราะ cron ทำงานทุกชั่วโมง)
+	publishHour := 9 // default
+	if config.Time != "" {
+		fmt.Sscanf(config.Time, "%d:", &publishHour)
+	}
+	if now.Hour() != publishHour {
+		return
+	}
+
+	slog.Info("AutoPublish: Starting", "day", now.Weekday().String(), "time", config.Time)
+
+	sites, err := s.siteRepo.GetAll(ctx)
+	if err != nil {
+		slog.Error("AutoPublish: Failed to get sites", "error", err)
+		return
+	}
+
+	for _, site := range sites {
+		if site.WPUrl == "" {
+			continue
+		}
+
+		// หาบทความ: source=queue/keyword, status=completed, publish_status=draft, เก่าสุดก่อน
+		articles, err := s.articleService.GetBySiteID(ctx, site.ID)
+		if err != nil {
+			continue
+		}
+
+		var candidate *models.Article
+		for i := range articles {
+			a := &articles[i]
+			if a.Status == "completed" && a.PublishStatus == "draft" &&
+				(a.Source == "queue" || a.Source == "keyword") {
+				if candidate == nil || a.CreatedAt.Before(candidate.CreatedAt) {
+					candidate = a
+				}
+			}
+		}
+
+		if candidate == nil {
+			continue
+		}
+
+		// ถ้าไม่มี featured image → สุ่มรูปจากหน้าเว็บ
+		if candidate.FeaturedImageURL == "" {
+			s.articleService.RandomFeaturedImage(ctx, candidate.ID)
+		}
+
+		// Publish
+		published, err := s.articleService.Publish(ctx, candidate.ID)
+		if err != nil {
+			slog.Warn("AutoPublish: Failed", "article_id", candidate.ID, "site", site.Name, "error", err)
+			continue
+		}
+
+		slog.Info("AutoPublish: Published", "article_id", published.ID, "title", published.Title, "site", site.Name)
 	}
 }
 

@@ -66,7 +66,11 @@ func (s *articleServiceImpl) Generate(ctx context.Context, req *dto.GenerateArti
 		return nil, fmt.Errorf("keyword not found: %w", err)
 	}
 
-	article := &models.Article{SiteID: siteID, KeywordID: &keywordID, Status: "generating"}
+	source := req.Source
+	if source == "" {
+		source = "manual"
+	}
+	article := &models.Article{SiteID: siteID, KeywordID: &keywordID, Status: "generating", Source: source}
 	if err := s.articleRepo.Create(ctx, article); err != nil {
 		return nil, err
 	}

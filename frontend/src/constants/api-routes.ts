@@ -80,4 +80,8 @@ export const API_ROUTES = {
     DELETE: (id: string) => `${API_BASE}/api/v1/articles/${id}`,
     DELETE_IMAGE: (id: string, imageId: string) => `${API_BASE}/api/v1/articles/${id}/images/${imageId}`,
   },
+  // Settings
+  SETTINGS: {
+    AUTO_PUBLISH: `${API_BASE}/api/v1/settings/auto-publish`,
+  },
 } as const

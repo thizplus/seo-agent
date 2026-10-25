@@ -16,6 +16,7 @@ type GenerateArticleRequest struct {
 	CustomTitle       string   `json:"customTitle,omitempty"`
 	ContentGuide      string   `json:"contentGuide,omitempty"`
 	WritingTone       string   `json:"writingTone,omitempty"`
+	Source            string   `json:"source,omitempty"` // queue | keyword | manual
 }
 
 type UpdateContentRequest struct {

@@ -23,6 +23,7 @@ import {
   GlobeIcon,
   PlusIcon,
   SearchIcon,
+  CalendarClockIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -97,6 +98,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <PlusIcon />
                 <span>เพิ่มเว็บไซต์</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>ตั้งค่า</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Auto Publish"
+                data-active={pathname === NAV_ROUTES.SETTINGS.AUTO_PUBLISH || undefined}
+                render={<Link href={NAV_ROUTES.SETTINGS.AUTO_PUBLISH} />}
+              >
+                <CalendarClockIcon />
+                <span>Auto Publish</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

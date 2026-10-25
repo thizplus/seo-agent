@@ -20,6 +20,7 @@ func Setup(app *fiber.App, c *di.Container) {
 	pageHandler := handlers.NewPageHandler(c.SitePageRepo, c.KeywordRepo, c.SiteRepo, c.PageAnalysisRepo, c.SerpHistoryRepo, c.AIEngine)
 	memberHandler := handlers.NewMemberHandler(c.SiteMemberRepo, c.SiteRepo, c.UserRepo)
 	focusQueueHandler := handlers.NewFocusQueueHandler(c.FocusQueueRepo, c.SiteRepo)
+	settingsHandler := handlers.NewSettingsHandler(c.SystemSettingRepo)
 
 	api := app.Group("/api/v1")
 
@@ -74,6 +75,11 @@ func Setup(app *fiber.App, c *di.Container) {
 	sites.Post("/:id/focus-queue/:queueId/skip", focusQueueHandler.SkipItem)
 	sites.Post("/:id/focus-queue/:queueId/retry", focusQueueHandler.RetryItem)
 	sites.Post("/:id/focus-queue/:queueId/restore", focusQueueHandler.RestoreItem)
+
+	// Settings
+	settings := protected.Group("/settings")
+	settings.Get("/auto-publish", settingsHandler.GetAutoPublish)
+	settings.Put("/auto-publish", settingsHandler.UpdateAutoPublish)
 
 	articles := protected.Group("/articles")
 	articles.Post("/generate", articleHandler.Generate)

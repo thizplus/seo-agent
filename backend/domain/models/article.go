@@ -27,6 +27,7 @@ type Article struct {
 	PublishedURL     string         `gorm:"type:text"`
 	CMSPostID        string         `gorm:"size:100"`
 	WordCount        int            `gorm:"default:0"`
+	Source           string         `gorm:"size:50;default:manual"` // queue | keyword | manual
 	IndexStatus      string         `gorm:"size:50"`
 	IndexCoverage    string         `gorm:"size:200"`
 	LastInspectedAt  *time.Time

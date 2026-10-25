@@ -39,8 +39,20 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 		&models.SiteMember{},
 		&models.KeywordFocusQueue{},
 		&models.ArticleMetricsHistory{},
+		&models.SystemSetting{},
 	); err != nil {
 		return nil, err
+	}
+
+	// Seed default auto-publish settings (เสาร์-อาทิตย์ เปิด)
+	var count int64
+	db.Model(&models.SystemSetting{}).Where("key = ?", "auto_publish").Count(&count)
+	if count == 0 {
+		db.Create(&models.SystemSetting{
+			Key:   "auto_publish",
+			Value: `{"enabled":true,"days":[0,6],"time":"09:00"}`,
+		})
+		slog.Info("Seeded default auto-publish settings (Sat+Sun 09:00)")
 	}
 
 	slog.Info("Database migrated")

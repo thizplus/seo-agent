@@ -10,4 +10,7 @@ export const NAV_ROUTES = {
   ARTICLES: {
     DETAIL: (id: string) => `/dashboard/articles/${id}`,
   },
+  SETTINGS: {
+    AUTO_PUBLISH: "/dashboard/settings/auto-publish",
+  },
 } as const
