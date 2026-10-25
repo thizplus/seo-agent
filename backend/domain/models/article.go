@@ -30,6 +30,7 @@ type Article struct {
 	IndexStatus      string         `gorm:"size:50"`
 	IndexCoverage    string         `gorm:"size:200"`
 	LastInspectedAt  *time.Time
+	LastOptimizedAt  *time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 

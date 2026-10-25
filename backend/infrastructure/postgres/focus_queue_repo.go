@@ -23,6 +23,15 @@ func (r *focusQueueRepository) GetBySiteID(ctx context.Context, siteID uuid.UUID
 	return items, err
 }
 
+func (r *focusQueueRepository) GetByArticleID(ctx context.Context, articleID uuid.UUID) (*models.KeywordFocusQueue, error) {
+	var item models.KeywordFocusQueue
+	err := r.db.WithContext(ctx).Where("article_id = ?", articleID).First(&item).Error
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
 func (r *focusQueueRepository) GetNextPending(ctx context.Context, siteID uuid.UUID) (*models.KeywordFocusQueue, error) {
 	var item models.KeywordFocusQueue
 	err := r.db.WithContext(ctx).

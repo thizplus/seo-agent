@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,26 +21,29 @@ import (
 )
 
 type articleServiceImpl struct {
-	articleRepo repositories.ArticleRepository
-	keywordRepo repositories.KeywordRepository
-	siteRepo    repositories.SiteRepository
-	aiEngine    ports.AIEnginePort
-	db          *gorm.DB
+	articleRepo    repositories.ArticleRepository
+	keywordRepo    repositories.KeywordRepository
+	siteRepo       repositories.SiteRepository
+	focusQueueRepo repositories.FocusQueueRepository
+	aiEngine       ports.AIEnginePort
+	db             *gorm.DB
 }
 
 func NewArticleService(
 	articleRepo repositories.ArticleRepository,
 	keywordRepo repositories.KeywordRepository,
 	siteRepo repositories.SiteRepository,
+	focusQueueRepo repositories.FocusQueueRepository,
 	aiEngine ports.AIEnginePort,
 	db *gorm.DB,
 ) *articleServiceImpl {
 	return &articleServiceImpl{
-		articleRepo: articleRepo,
-		keywordRepo: keywordRepo,
-		siteRepo:    siteRepo,
-		aiEngine:    aiEngine,
-		db:          db,
+		articleRepo:    articleRepo,
+		keywordRepo:    keywordRepo,
+		siteRepo:       siteRepo,
+		focusQueueRepo: focusQueueRepo,
+		aiEngine:       aiEngine,
+		db:             db,
 	}
 }
 
@@ -148,6 +152,10 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 	// บันทึก version เก่าก่อน regenerate
 	s.saveVersion(article, "before_regenerate")
 
+	// เก็บ slug เดิมไว้ — ถ้า publish แล้วห้ามเปลี่ยน (ป้องกัน URL 404)
+	oldSlug := article.Slug
+	isPublished := article.PublishStatus == "published"
+
 	article.Status = "generating"
 	s.articleRepo.Update(ctx, article)
 
@@ -155,6 +163,39 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 		"keyword": keyword.Keyword, "site_url": site.URL, "site_name": site.Name,
 		"brand_voice": site.BrandVoice, "industry": site.Industry,
 		"llm_provider": site.LLMProvider, "llm_api_key": site.LLMApiKey,
+	}
+
+	// ดึงข้อมูลจาก Focus Queue (ถ้ามี)
+	focusItem, _ := s.focusQueueRepo.GetByArticleID(ctx, id)
+	if focusItem != nil {
+		if focusItem.SecondaryKeywords != "" {
+			aiReq["secondary_keywords"] = splitKeywords(focusItem.SecondaryKeywords)
+		}
+		if focusItem.PillarURL != "" {
+			aiReq["pillar_url"] = focusItem.PillarURL
+		}
+		if focusItem.CustomTitle != "" {
+			aiReq["custom_title"] = focusItem.CustomTitle
+		}
+		// ลำดับ: Focus Queue override → Site default
+		if focusItem.OverrideGuide != "" {
+			aiReq["content_guide"] = focusItem.OverrideGuide
+		} else if site.ContentGuide != "" {
+			aiReq["content_guide"] = site.ContentGuide
+		}
+		if focusItem.OverrideTone != "" {
+			aiReq["writing_tone"] = focusItem.OverrideTone
+		} else if site.WritingTone != "" {
+			aiReq["writing_tone"] = site.WritingTone
+		}
+	} else {
+		// ไม่มี Focus Queue → ใช้ค่าจาก Site
+		if site.ContentGuide != "" {
+			aiReq["content_guide"] = site.ContentGuide
+		}
+		if site.WritingTone != "" {
+			aiReq["writing_tone"] = site.WritingTone
+		}
 	}
 
 	aiResp, err := s.aiEngine.GenerateArticle(ctx, aiReq)
@@ -165,12 +206,22 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 	}
 
 	article.Title = getStr(aiResp, "title")
-	article.Slug = getStr(aiResp, "slug")
 	article.Content = getStr(aiResp, "content")
 	article.MetaDescription = getStr(aiResp, "metaDescription")
 	article.WordCount = getInt(aiResp, "wordCount")
 	article.Status = "completed"
 	article.ContentVersion++
+
+	// ป้องกัน slug เปลี่ยน — ถ้า publish แล้วใช้ slug เดิม
+	if isPublished {
+		article.Slug = oldSlug
+	} else {
+		newSlug := getStr(aiResp, "slug")
+		if newSlug != "" {
+			article.Slug = newSlug
+		}
+	}
+
 	if b, err := json.Marshal(aiResp["schemaMarkup"]); err == nil {
 		article.SchemaMarkup = b
 	}
@@ -182,7 +233,7 @@ func (s *articleServiceImpl) Regenerate(ctx context.Context, id uuid.UUID) (*mod
 	}
 
 	s.saveVersion(article, "regenerate")
-	slog.Info("Article regenerated", "article_id", article.ID, "keyword", keyword.Keyword)
+	slog.Info("Article regenerated", "article_id", article.ID, "keyword", keyword.Keyword, "slug_preserved", isPublished)
 	return article, nil
 }
 
@@ -260,8 +311,18 @@ func (s *articleServiceImpl) RunOptimizer(ctx context.Context, id uuid.UUID) (ma
 		return nil, err
 	}
 
-	// เก็บ metrics history ทุกรอบ optimize (scheduler เรียกทุก 12 ชม.)
+	// เก็บ metrics history ทุกรอบ (ทุก 12 ชม.)
 	s.saveMetricsHistory(ctx, id, metrics)
+
+	// Cooldown 14 วัน — ป้องกันขยาย/แก้ซ้ำทุกรอบ
+	article, _ := s.articleRepo.GetByID(ctx, id)
+	if article.LastOptimizedAt != nil {
+		daysSince := time.Since(*article.LastOptimizedAt).Hours() / 24
+		if daysSince < 14 {
+			slog.Info("Optimizer: skipped (cooldown)", "article_id", id, "days_since", int(daysSince))
+			return map[string]any{"action": nil, "message": "Cooldown active", "metrics": metrics, "days_since_last": int(daysSince)}, nil
+		}
+	}
 
 	decideResp, err := s.aiEngine.DecideOptimization(ctx, metrics)
 	if err != nil {
@@ -272,7 +333,6 @@ func (s *articleServiceImpl) RunOptimizer(ctx context.Context, id uuid.UUID) (ma
 		return map[string]any{"action": nil, "message": "No optimization needed", "metrics": metrics}, nil
 	}
 
-	article, _ := s.articleRepo.GetByID(ctx, id)
 	site, _ := s.siteRepo.GetByID(ctx, article.SiteID)
 	keyword, _ := s.keywordRepo.GetByID(ctx, *article.KeywordID)
 	kw := ""
@@ -289,25 +349,27 @@ func (s *articleServiceImpl) RunOptimizer(ctx context.Context, id uuid.UUID) (ma
 	}
 
 	data, _ := optimizeResp["data"].(map[string]any)
-	afterData, _ := data["after"].(map[string]any)
 
-	if action == "rewrite_title" {
-		if t := getStr(afterData, "title"); t != "" {
-			article.Title = t
-			article.ContentVersion++
-			s.articleRepo.Update(ctx, article)
-			s.saveVersion(article, "rewrite_title")
-		}
-	} else if action == "expand_content" {
-		if c := getStr(afterData, "content"); c != "" {
-			article.Content = c
-			article.ContentVersion++
-			s.articleRepo.Update(ctx, article)
-			s.saveVersion(article, "expand_content")
-		}
+	// บันทึก OptimizationLog เป็น "ข้อเสนอ" ไม่เขียนทับ content อัตโนมัติ
+	beforeJSON, _ := json.Marshal(map[string]any{"title": article.Title, "wordCount": article.WordCount})
+	afterJSON, _ := json.Marshal(data)
+	log := models.OptimizationLog{
+		ArticleID:  id,
+		Action:     action,
+		Reason:     fmt.Sprintf("position=%.1f, ctr=%.4f, impressions=%v", metrics["position"], metrics["ctr"], metrics["impressions"]),
+		BeforeData: beforeJSON,
+		AfterData:  afterJSON,
+		Result:     "suggested",
 	}
+	s.db.Create(&log)
 
-	return map[string]any{"action": action, "metrics": metrics, "result": data}, nil
+	// อัปเดต cooldown timestamp
+	now := time.Now()
+	article.LastOptimizedAt = &now
+	s.articleRepo.Update(ctx, article)
+
+	slog.Info("Optimizer: suggestion saved", "article_id", id, "action", action)
+	return map[string]any{"action": action, "metrics": metrics, "result": data, "status": "suggested"}, nil
 }
 
 func (s *articleServiceImpl) GenerateImages(ctx context.Context, id uuid.UUID, count int) (any, error) {
@@ -927,4 +989,15 @@ func getInt(m map[string]any, key string) int {
 		}
 	}
 	return 0
+}
+
+func splitKeywords(s string) []string {
+	var result []string
+	for _, part := range strings.Split(s, ",") {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

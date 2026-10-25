@@ -34,7 +34,8 @@ func (c *HTTPClient) call(ctx context.Context, path string, body any) (map[strin
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("AI engine returned status %d", resp.StatusCode)
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("AI engine returned status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var result map[string]any

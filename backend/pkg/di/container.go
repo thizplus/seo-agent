@@ -52,7 +52,7 @@ func NewContainer(cfg *config.Config, db *gorm.DB) *Container {
 	authService := serviceimpl.NewAuthService(userRepo, siteMemberRepo, cfg.Google.ClientID, cfg.Google.ClientSecret, cfg.Google.RedirectURL)
 	siteService := serviceimpl.NewSiteService(siteRepo, sitePageRepo, keywordRepo, siteMemberRepo, aiEngine)
 	keywordService := serviceimpl.NewKeywordService(keywordRepo)
-	articleService := serviceimpl.NewArticleService(articleRepo, keywordRepo, siteRepo, aiEngine, db)
+	articleService := serviceimpl.NewArticleService(articleRepo, keywordRepo, siteRepo, focusQueueRepo, aiEngine, db)
 
 	return &Container{
 		Config:         cfg,

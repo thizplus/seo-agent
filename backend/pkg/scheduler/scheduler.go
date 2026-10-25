@@ -334,7 +334,10 @@ func (s *Scheduler) generateFromKeywords(ctx context.Context, site models.Site) 
 
 		slog.Info("ContentGen: Generating from keywords", "keyword", kw.Keyword, "site", site.Name)
 		article, err := s.articleService.Generate(ctx, &dto.GenerateArticleRequest{
-			SiteID: site.ID.String(), KeywordID: kw.ID.String(),
+			SiteID:       site.ID.String(),
+			KeywordID:    kw.ID.String(),
+			ContentGuide: site.ContentGuide,
+			WritingTone:  site.WritingTone,
 		})
 		if err != nil {
 			slog.Warn("ContentGen: Failed", "keyword", kw.Keyword, "error", err)

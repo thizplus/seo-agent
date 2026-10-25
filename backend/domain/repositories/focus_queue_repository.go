@@ -11,6 +11,7 @@ import (
 type FocusQueueRepository interface {
 	GetBySiteID(ctx context.Context, siteID uuid.UUID) ([]models.KeywordFocusQueue, error)
 	GetNextPending(ctx context.Context, siteID uuid.UUID) (*models.KeywordFocusQueue, error)
+	GetByArticleID(ctx context.Context, articleID uuid.UUID) (*models.KeywordFocusQueue, error)
 	Create(ctx context.Context, item *models.KeywordFocusQueue) error
 	CreateBatch(ctx context.Context, items []models.KeywordFocusQueue) error
 	Update(ctx context.Context, item *models.KeywordFocusQueue) error
