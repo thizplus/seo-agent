@@ -130,7 +130,7 @@ const TOOLBAR_ITEMS = [
   { icon: AlignLeftIcon, label: "ชิดซ้าย", action: "align-left" },
   { icon: AlignCenterIcon, label: "จัดกลาง", action: "align-center" },
   { icon: AlignRightIcon, label: "ชิดขวา", action: "align-right" },
-  { icon: ColumnsIcon, label: "Gallery 2 คอลัมน์", action: "gallery" },
+  { icon: ColumnsIcon, label: "Gallery", action: "gallery" },
   { type: "separator" as const },
   { icon: MinusIcon, label: "HR", action: "line", prefix: "\n---\n" },
   { icon: QuoteIcon, label: "Quote", action: "line", prefix: "> " },

@@ -15,9 +15,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   Loader2Icon,
   UploadIcon,
-  ImagePlusIcon,
-  XIcon,
   GlobeIcon,
+  XIcon,
+  CheckIcon,
 } from "lucide-react"
 
 interface GalleryImage {
@@ -40,8 +40,8 @@ export function GalleryInsertDialog({
   onUpload,
   onScrapePageImages,
 }: GalleryInsertDialogProps) {
-  const [images, setImages] = useState<[GalleryImage | null, GalleryImage | null]>([null, null])
-  const [activeSlot, setActiveSlot] = useState<0 | 1>(0)
+  const [selectedImages, setSelectedImages] = useState<GalleryImage[]>([])
+  const [cols, setCols] = useState(2)
 
   // Page images
   const [pageImages, setPageImages] = useState<{ url: string; alt: string }[]>([])
@@ -70,18 +70,20 @@ export function GalleryInsertDialog({
     }
   }, [open])
 
-  const setSlotImage = (img: GalleryImage) => {
-    setImages((prev) => {
-      const next = [...prev] as [GalleryImage | null, GalleryImage | null]
-      next[activeSlot] = img
-      // เลื่อนไป slot ถัดไปอัตโนมัติ
-      if (activeSlot === 0 && !next[1]) setActiveSlot(1)
-      return next
+  const togglePageImage = (img: { url: string; alt: string }) => {
+    setSelectedImages((prev) => {
+      const exists = prev.findIndex((s) => s.url === img.url)
+      if (exists >= 0) return prev.filter((_, i) => i !== exists)
+      return [...prev, { url: img.url, alt: img.alt || "image" }]
     })
   }
 
-  const handleSelectPageImage = (img: { url: string; alt: string }) => {
-    setSlotImage({ url: img.url, alt: img.alt || "image" })
+  const addImage = (img: GalleryImage) => {
+    setSelectedImages((prev) => [...prev, img])
+  }
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,8 +99,7 @@ export function GalleryInsertDialog({
     setUploading(true)
     try {
       const result = await onUpload(selectedFile.current, uploadAlt)
-      setSlotImage({ url: result.url, alt: uploadAlt || "image" })
-      // Reset upload state
+      addImage({ url: result.url, alt: uploadAlt || "image" })
       setUploadAlt("")
       setPreviewUrl(null)
       selectedFile.current = null
@@ -112,31 +113,22 @@ export function GalleryInsertDialog({
 
   const handleInsertUrl = () => {
     if (!urlInput.trim()) return
-    setSlotImage({ url: urlInput, alt: urlAlt || "image" })
+    addImage({ url: urlInput, alt: urlAlt || "image" })
     setUrlInput("")
     setUrlAlt("")
   }
 
   const handleInsertGallery = () => {
-    const [img1, img2] = images
-    if (!img1 || !img2) return
-    const md = `{{gallery}}\n![${img1.alt}](${img1.url})\n![${img2.alt}](${img2.url})\n{{/gallery}}`
+    if (selectedImages.length < 2) return
+    const imgLines = selectedImages.map((img) => `![${img.alt}](${img.url})`).join("\n")
+    const md = `{{gallery cols=${cols}}}\n${imgLines}\n{{/gallery}}`
     onInsert(md)
     handleClose()
   }
 
-  const removeSlot = (slot: 0 | 1) => {
-    setImages((prev) => {
-      const next = [...prev] as [GalleryImage | null, GalleryImage | null]
-      next[slot] = null
-      return next
-    })
-    setActiveSlot(slot)
-  }
-
   const handleClose = () => {
-    setImages([null, null])
-    setActiveSlot(0)
+    setSelectedImages([])
+    setCols(2)
     setPageImages([])
     setPageLoaded(false)
     setUploadAlt("")
@@ -147,57 +139,62 @@ export function GalleryInsertDialog({
     onOpenChange(false)
   }
 
-  const canInsert = images[0] !== null && images[1] !== null
+  const isSelected = (url: string) => selectedImages.some((s) => s.url === url)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>แทรก Gallery (2 รูปคู่กัน)</DialogTitle>
+          <DialogTitle>แทรก Gallery</DialogTitle>
         </DialogHeader>
 
-        {/* Preview slots */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {([0, 1] as const).map((slot) => (
-            <div
-              key={slot}
-              onClick={() => setActiveSlot(slot)}
-              className={`relative rounded-lg border-2 overflow-hidden cursor-pointer min-h-[100px] flex items-center justify-center bg-muted/30 transition-all ${
-                activeSlot === slot
-                  ? "border-primary ring-2 ring-primary/30"
-                  : "border-dashed border-muted-foreground/30"
-              }`}
-            >
-              {images[slot] ? (
-                <>
+        {/* Selected images preview */}
+        {selectedImages.length > 0 && (
+          <div className="space-y-2">
+            <Label>รูปที่เลือก ({selectedImages.length})</Label>
+            <div className="flex flex-wrap gap-2">
+              {selectedImages.map((img, i) => (
+                <div key={i} className="relative group">
                   <img
-                    src={images[slot]!.url}
-                    alt={images[slot]!.alt}
-                    className="w-full h-auto max-h-[140px] object-cover"
+                    src={img.url}
+                    alt={img.alt}
+                    className="h-16 w-16 rounded-md border object-cover"
                   />
+                  <span className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] font-bold px-1 rounded-br">
+                    {i + 1}
+                  </span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); removeSlot(slot) }}
-                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <XIcon className="size-3" />
                   </button>
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 rounded">
-                    รูป {slot + 1}
-                  </span>
-                </>
-              ) : (
-                <div className="text-center text-muted-foreground text-sm p-4">
-                  <ImagePlusIcon className="size-6 mx-auto mb-1 opacity-50" />
-                  เลือกรูป {slot + 1}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
-        <p className="text-xs text-muted-foreground mb-2">
-          กำลังเลือกให้ <strong>รูป {activeSlot + 1}</strong> — คลิกช่องด้านบนเพื่อสลับ
-        </p>
+        {/* Column selector */}
+        <div className="space-y-2">
+          <Label>จำนวนคอลัมน์</Label>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setCols(n)}
+                className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-colors ${
+                  cols === n
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background text-muted-foreground hover:bg-accent"
+                }`}
+              >
+                {n} คอลัมน์
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Tabs for selecting images */}
         <Tabs defaultValue="page">
@@ -220,15 +217,28 @@ export function GalleryInsertDialog({
             {pageImages.length > 0 && (
               <div className="max-h-[250px] overflow-y-auto">
                 <div className="columns-3 gap-2 [&>*]:mb-2">
-                  {pageImages.map((img, i) => (
-                    <div
-                      key={i}
-                      onClick={() => handleSelectPageImage(img)}
-                      className="break-inside-avoid rounded-lg border-2 border-transparent overflow-hidden cursor-pointer transition-all hover:border-primary hover:ring-2 hover:ring-primary/30"
-                    >
-                      <img src={img.url} alt={img.alt} className="w-full h-auto" loading="lazy" />
-                    </div>
-                  ))}
+                  {pageImages.map((img, i) => {
+                    const selected = isSelected(img.url)
+                    const selectedIndex = selectedImages.findIndex((s) => s.url === img.url)
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => togglePageImage(img)}
+                        className={`break-inside-avoid rounded-lg border-2 overflow-hidden cursor-pointer transition-all relative ${
+                          selected
+                            ? "border-primary ring-2 ring-primary/30"
+                            : "border-transparent hover:border-primary/50"
+                        }`}
+                      >
+                        <img src={img.url} alt={img.alt} className="w-full h-auto" loading="lazy" />
+                        {selected && (
+                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full size-5 flex items-center justify-center text-xs font-bold">
+                            {selectedIndex + 1}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -256,7 +266,7 @@ export function GalleryInsertDialog({
               )}
               <Button onClick={handleUpload} disabled={!selectedFile.current || uploading} size="sm">
                 {uploading ? <Loader2Icon className="mr-2 size-4 animate-spin" /> : <UploadIcon className="mr-2 size-4" />}
-                {uploading ? "กำลังอัปโหลด..." : `อัปโหลดเป็นรูป ${activeSlot + 1}`}
+                {uploading ? "กำลังอัปโหลด..." : "อัปโหลดเพิ่ม"}
               </Button>
             </div>
           </TabsContent>
@@ -273,7 +283,7 @@ export function GalleryInsertDialog({
               )}
               <Button onClick={handleInsertUrl} disabled={!urlInput.trim()} size="sm">
                 <GlobeIcon className="mr-2 size-4" />
-                ใช้เป็นรูป {activeSlot + 1}
+                เพิ่มรูป
               </Button>
             </div>
           </TabsContent>
@@ -281,8 +291,9 @@ export function GalleryInsertDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>ยกเลิก</Button>
-          <Button onClick={handleInsertGallery} disabled={!canInsert}>
-            แทรก Gallery
+          <Button onClick={handleInsertGallery} disabled={selectedImages.length < 2}>
+            <CheckIcon className="mr-1 size-4" />
+            แทรก Gallery ({selectedImages.length} รูป, {cols} คอลัมน์)
           </Button>
         </DialogFooter>
       </DialogContent>

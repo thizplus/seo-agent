@@ -52,8 +52,10 @@ class GutenbergFormatter:
                     i += 1
                     continue
 
-            # Gallery block: {{gallery}} ... {{/gallery}}
-            if line == "{{gallery}}":
+            # Gallery block: {{gallery}} or {{gallery cols=3}} ... {{/gallery}}
+            gallery_match = re.match(r"^\{\{gallery(?:\s+cols=(\d))?\}\}$", line)
+            if gallery_match:
+                gallery_cols = int(gallery_match.group(1)) if gallery_match.group(1) else None
                 gallery_images = []
                 i += 1
                 while i < len(lines) and lines[i].strip() != "{{/gallery}}":
@@ -63,7 +65,7 @@ class GutenbergFormatter:
                     i += 1
                 i += 1  # skip {{/gallery}}
                 if gallery_images:
-                    blocks.append(self._make_gallery(gallery_images))
+                    blocks.append(self._make_gallery(gallery_images, gallery_cols))
                 continue
 
             # Text alignment: {left|center|right}...{/left|center|right}
@@ -163,7 +165,7 @@ class GutenbergFormatter:
             return True
         if line.startswith("{{__YT_EMBED__:"):
             return True
-        if line == "{{gallery}}" or line == "{{/gallery}}":
+        if re.match(r"^\{\{gallery(?:\s+cols=\d)?\}\}$", line) or line == "{{/gallery}}":
             return True
         if re.match(r"^\{(left|center|right)\}.+\{/(left|center|right)\}$", line):
             return True
@@ -212,8 +214,8 @@ class GutenbergFormatter:
             )
         return f'<!-- wp:image -->\n<figure class="wp-block-image size-large"><img src="{url}" alt="{alt}" /></figure>\n<!-- /wp:image -->'
 
-    def _make_gallery(self, images: list[dict]) -> str:
-        cols = len(images)
+    def _make_gallery(self, images: list[dict], cols: int = None) -> str:
+        cols = cols or min(len(images), 4)
         inner = []
         for img in images:
             inner.append(

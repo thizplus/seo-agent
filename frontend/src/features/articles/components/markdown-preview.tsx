@@ -41,19 +41,20 @@ function preprocessContent(content: string): string {
     }
   )
 
-  // Gallery: {{gallery}} ... {{/gallery}}
+  // Gallery: {{gallery}} or {{gallery cols=N}} ... {{/gallery}}
   content = content.replace(
-    /\{\{gallery\}\}\n([\s\S]*?)\n\{\{\/gallery\}\}/g,
-    (_, inner) => {
+    /\{\{gallery(?:\s+cols=(\d))?\}\}\n([\s\S]*?)\n\{\{\/gallery\}\}/g,
+    (_, colsStr, inner) => {
       const images = [...inner.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)]
       if (images.length === 0) return ""
+      const cols = colsStr ? parseInt(colsStr) : Math.min(images.length, 4)
       const imgTags = images
         .map(
           (m: RegExpMatchArray) =>
-            `<div style="flex:1;min-width:0"><img src="${m[2]}" alt="${m[1]}" style="width:100%;border-radius:8px;object-fit:cover" /></div>`
+            `<div style="min-width:0"><img src="${m[2]}" alt="${m[1]}" style="width:100%;border-radius:8px;object-fit:cover" /></div>`
         )
         .join("")
-      return `<div style="display:flex;gap:8px;margin:1em 0">${imgTags}</div>`
+      return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;margin:1em 0">${imgTags}</div>`
     }
   )
 
